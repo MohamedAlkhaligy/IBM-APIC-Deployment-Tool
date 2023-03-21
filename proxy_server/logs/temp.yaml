@@ -1,0 +1,70 @@
+
+global-policy: '1.0.0'
+info:
+  name: 'input-gp'
+  title: 'Input GP'
+  version: '1.0.0'
+gateways:
+  - 'datapower-api-gateway'
+assembly:
+  execute:
+    - xslt:
+        version: '2.0.0'
+        title: 'Extract Incoming MTLS Certificate'
+        input: false
+        source: "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<xsl:stylesheet version=\"1.0\"\r\n\txmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" \r\n\txmlns:dp=\"http://www.datapower.com/extensions\"\r\n    xmlns:apigw=\"http://www.ibm.com/xmlns/datapower/2017/11/apigateway\"\r\n\textension-element-prefixes=\"dp apigw\"\r\n\texclude-result-prefixes=\"xsl dp\">\r\n    <xsl:output method=\"xml\" version=\"1.0\" encoding=\"UTF-8\"\tindent=\"yes\" />\r\n    <xsl:template match=\"/\">\r\n\t\t<xsl:variable name=\"tlsInfo\">\r\n            <xsl:copy-of select=\"dp:variable('var://service/tls-info')\"/>\r\n\t\t</xsl:variable>\t\t\r\n\t\t<apigw:set-variable name=\"'mtlsCert'\" value=\"$tlsInfo/tls-info/peer-certificate/text()\"/>\r\n\r\n    </xsl:template>\r\n</xsl:stylesheet>"
+    - gatewayscript:
+        version: '2.0.0'
+        title: 'Generating X509 Certificate Thumbprint'
+        source: "const crypto = require(\"crypto\");\r\n\r\nlet mtlsCert = context.get('mtlsCert');\r\n\r\nconst rawCert = Buffer.from(mtlsCert, \"base64\");\r\nconst sha256sum = crypto.createHash(\"sha256\").update(rawCert).digest(\"hex\");\r\nvar fingerPrint = sha256sum.toUpperCase().replace(/(.{2})(?!$)/g, \"$1:\");\r\n\r\nvar sigOctets = fingerPrint.split(\":\");\r\nvar sigBuffer = Buffer.alloc(sigOctets.length)\r\nfor(var i=0; i<sigOctets.length; i++){\r\n   sigBuffer.writeUInt8(parseInt(sigOctets[i], 16), i);\r\n}\r\nvar x5t = sigBuffer.toString('base64').replace(/=/g, '').replace(/\\+/g, '-').replace(/\\//g, '_');\r\ncontext.set('mtlsCertFingerprint',x5t);"
+    - switch:
+        version: '2.0.0'
+        title: 'switch'
+        case:
+          - condition: '($operationPath() = ''/accounts'' or $operationPath() = ''/accounts/{AccountId}'' or $operationPath() = ''/balances'' or $operationPath() = ''/accounts/{AccountId}/balances'' or $operationPath() = ''/accounts/{AccountId}/beneficiaries'' or $operationPath() = ''/accounts/{AccountId}/transactions'' or $operationPath() = ''/transactions'' or $operationPath() = ''/domestic-payments/{DomesticPaymentId}/payment-details'' or $operationPath() = ''/domestic-payment-consents/{ConsentId}/funds-confirmation'' or $operationPath() = ''/domestic-payments'' or $operationPath() = ''/domestic-payments/{DomesticPaymentId}'')'
+            execute:
+              - gatewayscript:
+                  version: '2.0.0'
+                  title: 'gatewayscript'
+                  source: "var apim = require('apim');\n\n\nvar oauth = apim.getvariable('oauth');\n\n\n// apim.setvariable('message.body',oauth);\n\nvar clientId = oauth.third_party.response.client_id;\napim.setvariable('clientapp',clientId);\n"
+              - client-security:
+                  version: '2.0.0'
+                  title: 'client-security'
+                  stop-on-error: true
+                  secret-required: false
+                  extract-credential-method: 'context-var'
+                  client-auth-method: 'native'
+                  id-name: 'clientapp'
+                  secret-name: 'clientsecret'
+              - gatewayscript:
+                  version: '2.0.0'
+                  title: 'Check Rate Limit'
+                  source: "const apim = require('apim');\r\nconst rl = require('ratelimit');\r\n\r\nconst consentId = apim.getvariable('oauth.third_party.response.openbanking_intent_id');\r\napim.setvariable('rateLimitExceededFlag', false);\r\n\r\nlet rate = rl.rateCreate(consentId, 10, 86400, 'fixed');\r\n\r\nrate.remove(1, function(err, remaining, timeToReset){\r\n  if(err) { \r\n    apim.setvariable('rateLimitExceededFlag', true);\r\n  }\r\n});\r\n\r\n"
+          - condition: '($operationPath() = ''/domestic-payment-consents'' or $operationPath() = ''/domestic-payment-consents/{ConsentId}'')'
+            execute:
+              - gatewayscript:
+                  version: '2.0.0'
+                  title: 'gatewayscript'
+                  source: "var apim = require('apim');\n\n\nvar oauth = apim.getvariable('oauth');\n\n\n// apim.setvariable('message.body',oauth);\n\nvar clientId = oauth.third_party.response.client_id;\napim.setvariable('clientapp',clientId);\n"
+              - client-security:
+                  version: '2.0.0'
+                  title: 'client-security'
+                  stop-on-error: true
+                  secret-required: false
+                  extract-credential-method: 'context-var'
+                  client-auth-method: 'native'
+                  id-name: 'clientapp'
+                  secret-name: 'clientsecret'
+          - otherwise: []
+    - gatewayscript:
+        version: '2.0.0'
+        title: 'Load Application Input Processing'
+        source: "let apim = require('apim');\nvar urlopen = require ('urlopen');\n\nlet appName = apim.getvariable('client.app.name');\nlet catalogName = apim.getvariable('env.path');\nlet inputProcessingFilePath = 'local:/GlobalPolicies/TRANSFORMATION/Input/' + catalogName + '/Input-GP.js';\n\nurlopen.open({ target: inputProcessingFilePath, method: 'get'}, function(error, response) {\n  if (error) {\n    console.debug(inputProcessingFilePath + \" cannot be found\");\n  } else {\n    if (response.statusCode === 200) {\n        console.debug(inputProcessingFilePath + \" will be processed\");\n        let InputProcessing = require(inputProcessingFilePath);\n        InputProcessing.Execute();\n    } else {\n      console.debug(inputProcessingFilePath + \" cannot be found\");\n    }\n  }\n});"
+  catch:
+    - errors:
+        - 'UnauthorizedError'
+      execute:
+        - gatewayscript:
+            version: '2.0.0'
+            title: 'Build Error'
+            source: "let apim = require('apim');\r\rlet response = {\r    status: {\r        \"code\": 403,\r        \"reason\": \"Forbidden\"\r    },\r    body:{\r        \"code\": \"UnauthorizedError\",\r         \"message\": \"Invalid Access Token\"\r    },   \r}\r    \rapim.setvariable('preFlowError',response);"

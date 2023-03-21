@@ -1,0 +1,10 @@
+{
+  "proxy": {
+    "host": "localhost",
+    "port": 112,
+    "default-target-url": "https://127.0.0.1:2000"
+  },
+	"headers": {
+    
+  }
+}

@@ -1,0 +1,513 @@
+import 'dart:convert';
+
+import 'package:logger/logger.dart';
+import 'package:yaml/yaml.dart';
+import 'package:yaml_writer/yaml_writer.dart';
+
+import './auth_service.dart';
+import '../global_configurations.dart';
+import '../models/environment.dart';
+import '../models/global_policies/global_policy_meta.dart';
+import '../models/global_policies/list_global_policies_response_body.dart';
+import '../models/http_headers.dart';
+import '../utilities/error_handling_utilities.dart';
+import '../utilities/http_utilities.dart';
+
+enum HookType { pre, post }
+
+class GlobalPoliciesService {
+  static final _globalPoliciesService = GlobalPoliciesService._internal();
+
+  GlobalPoliciesService._internal();
+
+  factory GlobalPoliciesService.getInstance() {
+    return _globalPoliciesService;
+  }
+
+  Future<List<GlobalPolicyMeta>> listGlobalPolicies(
+    Environment environment,
+    String organizationName,
+    String catalogName,
+    String configuredGatewayName, {
+    String queryParameters = "",
+  }) async {
+    List<GlobalPolicyMeta> globalPolicies = [];
+    final logger = Logger();
+    try {
+      // await AuthService.getInstance().introspectAndLogin(environment);
+
+      String url =
+          '${environment.serverURL}/api/catalogs/$organizationName/$catalogName/configured-gateway-services/$configuredGatewayName/global-policies?$queryParameters';
+
+      HTTPHeaders headers = HTTPHeaders(
+        accept: 'application/json',
+        authorization: environment.accessToken,
+      );
+
+      var httpResponse =
+          await HTTPUtilites.getInstance().get(url, headers.typedJson);
+
+      if (httpResponse != null && httpResponse.statusCode == 401) {
+        final accessToken = await AuthService.getInstance().login(
+          clientID: environment.clientID,
+          clientSecret: environment.clientSecret,
+          serverURL: environment.serverURL,
+          username: environment.username,
+          password: environment.password,
+        );
+        environment.accessToken = accessToken;
+        headers.authorization = accessToken;
+        httpResponse =
+            await HTTPUtilites.getInstance().get(url, headers.typedJson);
+      }
+
+      if (httpResponse != null && httpResponse.statusCode == 200) {
+        final jsonResponseBody = json.decode(httpResponse.body);
+        final listCatalogsResponseBody =
+            ListGlobalPoliciesResponseBody.fromJson(jsonResponseBody);
+        globalPolicies = listCatalogsResponseBody.result;
+        logger.i("GlobalPoliciesService:listGlobalPolicies");
+      }
+    } catch (error, stackTrace) {
+      logger.e("GlobalPoliciesService:listGlobalPolicies", error, stackTrace);
+      ErrorHandlingUtilities.instance.showPopUpError(error.toString());
+    }
+    return globalPolicies;
+  }
+
+  Future<bool> uploadGlobalPolicy(
+    String globalPolicyYamlString, {
+    required Environment environment,
+    required String organizationName,
+    required String catalogName,
+    required String configuredGatewayName,
+    ignoreUIError = false,
+  }) async {
+    var logger = Logger();
+    try {
+      // await AuthService.getInstance().introspectAndLogin(environment);
+      String url =
+          '${environment.serverURL}/api/catalogs/$organizationName/$catalogName/configured-gateway-services/$configuredGatewayName/global-policies';
+
+      final requestBody = {
+        "global_policy": loadYaml(globalPolicyYamlString),
+      };
+
+      final yamlWriter = YAMLWriter();
+
+      HTTPHeaders headers = HTTPHeaders(
+        accept: 'application/json',
+        contentType: 'application/yaml',
+        authorization: environment.accessToken,
+      );
+
+      var httpResponse = await HTTPUtilites.getInstance().post(
+        url,
+        yamlWriter.write(requestBody),
+        headers.typedJson,
+      );
+
+      if (httpResponse != null && httpResponse.statusCode == 401) {
+        final accessToken = await AuthService.getInstance().login(
+          clientID: environment.clientID,
+          clientSecret: environment.clientSecret,
+          serverURL: environment.serverURL,
+          username: environment.username,
+          password: environment.password,
+        );
+        environment.accessToken = accessToken;
+        headers.authorization = accessToken;
+        httpResponse = await HTTPUtilites.getInstance().post(
+          url,
+          yamlWriter.write(requestBody),
+          headers.typedJson,
+        );
+      }
+
+      if (httpResponse != null && httpResponse.statusCode == 201) {
+        return true;
+      }
+    } catch (error) {
+      logger.e("GlobalPoliciesService:uploadGlobalPolicy", error);
+      ErrorHandlingUtilities.instance.showPopUpError(error.toString());
+    }
+    return false;
+  }
+
+  Future<String> getGlobalPolicyYAML({
+    required Environment environment,
+    required String organizationName,
+    required String catalogName,
+    required String configuredGatewayName,
+    required String globalPolicyName,
+    required String globalPolicyVersion,
+    ignoreUIError = false,
+  }) async {
+    final logger = Logger();
+    try {
+      // await AuthService.getInstance().introspectAndLogin(environment);
+
+      String url =
+          '${environment.serverURL}/api/catalogs/$organizationName/$catalogName/configured-gateway-services/$configuredGatewayName/global-policies/$globalPolicyName/$globalPolicyVersion?fields=add(global_policy)&fields=global_policy';
+
+      HTTPHeaders headers = HTTPHeaders(
+        accept: 'application/yaml',
+        authorization: environment.accessToken,
+      );
+
+      var httpResponse =
+          await HTTPUtilites.getInstance().get(url, headers.typedJson);
+
+      if (httpResponse != null && httpResponse.statusCode == 401) {
+        final accessToken = await AuthService.getInstance().login(
+          clientID: environment.clientID,
+          clientSecret: environment.clientSecret,
+          serverURL: environment.serverURL,
+          username: environment.username,
+          password: environment.password,
+        );
+        environment.accessToken = accessToken;
+        headers.authorization = accessToken;
+        httpResponse =
+            await HTTPUtilites.getInstance().get(url, headers.typedJson);
+      }
+
+      if (httpResponse != null && httpResponse.statusCode == 200) {
+        return httpResponse.body;
+      }
+    } catch (error, stackTrace) {
+      logger.e("GlobalPoliciesService:getGlobalPolicyYAML", error, stackTrace);
+      ErrorHandlingUtilities.instance.showPopUpError(error.toString());
+    }
+    return '';
+  }
+
+  Future<bool> assignPrehookGlobalPolicy({
+    required Environment environment,
+    required String organizationName,
+    required String catalogName,
+    required String configuredGatewayName,
+    required String globalPolicyUrl,
+    String queryParameters = "",
+    bool ignoreUIError = false,
+  }) async {
+    return await _assignHookGlobalPolicy(
+      environment: environment,
+      organizationName: organizationName,
+      catalogName: catalogName,
+      configuredGatewayName: configuredGatewayName,
+      globalPolicyUrl: globalPolicyUrl,
+      queryParameters: queryParameters,
+      hookType: HookType.pre,
+      ignoreUIError: ignoreUIError,
+    );
+  }
+
+  Future<bool> assignPosthookGlobalPolicy({
+    required Environment environment,
+    required String organizationName,
+    required String catalogName,
+    required String configuredGatewayName,
+    required String globalPolicyUrl,
+    String queryParameters = "",
+    bool ignoreUIError = false,
+  }) async {
+    return await _assignHookGlobalPolicy(
+      environment: environment,
+      organizationName: organizationName,
+      catalogName: catalogName,
+      configuredGatewayName: configuredGatewayName,
+      globalPolicyUrl: globalPolicyUrl,
+      queryParameters: queryParameters,
+      hookType: HookType.post,
+      ignoreUIError: ignoreUIError,
+    );
+  }
+
+  Future<bool> _assignHookGlobalPolicy({
+    required Environment environment,
+    required String organizationName,
+    required String catalogName,
+    required String configuredGatewayName,
+    required String globalPolicyUrl,
+    String queryParameters = "",
+    HookType hookType = HookType.pre,
+    bool ignoreUIError = false,
+  }) async {
+    var logger = Logger();
+    try {
+      // await AuthService.getInstance().introspectAndLogin(environment);
+
+      final requestBody = {
+        'global_policy_url': globalPolicyUrl,
+      };
+
+      String hookTypeString = hookType == HookType.pre ? "prehook" : "posthook";
+      String url =
+          '${environment.serverURL}/api/catalogs/$organizationName/$catalogName/configured-gateway-services/$configuredGatewayName//global-policy-$hookTypeString?$queryParameters';
+
+      HTTPHeaders headers = HTTPHeaders(
+        accept: 'application/json',
+        contentType: 'application/json',
+        authorization: environment.accessToken,
+      );
+
+      var httpResponse = await HTTPUtilites.getInstance().post(
+        url,
+        json.encode(requestBody),
+        headers.typedJson,
+      );
+
+      if (httpResponse != null && httpResponse.statusCode == 401) {
+        final accessToken = await AuthService.getInstance().login(
+          clientID: environment.clientID,
+          clientSecret: environment.clientSecret,
+          serverURL: environment.serverURL,
+          username: environment.username,
+          password: environment.password,
+        );
+        environment.accessToken = accessToken;
+        headers.authorization = accessToken;
+        httpResponse = await HTTPUtilites.getInstance().post(
+          url,
+          json.encode(requestBody),
+          headers.typedJson,
+        );
+      }
+
+      if (httpResponse != null && httpResponse.statusCode == 200) {
+        return true;
+      }
+    } catch (error) {
+      logger.e("GlobalPoliciesService:assignHookGlobalPolicy", error);
+      ErrorHandlingUtilities.instance.showPopUpError(error.toString());
+    }
+    return false;
+  }
+
+  Future<GlobalPolicyMeta?> getPrehookGlobalPolicy(
+    Environment environment,
+    String organizationName,
+    String catalogName,
+    String configuredGatewayName, {
+    String queryParameters = "",
+    bool ignoreUIError = false,
+  }) async {
+    return await _getHookGlobalPolicy(
+      environment,
+      organizationName,
+      catalogName,
+      configuredGatewayName,
+      queryParameters: queryParameters,
+      hookType: HookType.pre,
+      ignoreUIError: ignoreUIError,
+    );
+  }
+
+  Future<GlobalPolicyMeta?> getPosthookGlobalPolicy(
+    Environment environment,
+    String organizationName,
+    String catalogName,
+    String configuredGatewayName, {
+    String queryParameters = "",
+    bool ignoreUIError = false,
+  }) async {
+    return await _getHookGlobalPolicy(
+      environment,
+      organizationName,
+      catalogName,
+      configuredGatewayName,
+      queryParameters: queryParameters,
+      hookType: HookType.post,
+      ignoreUIError: ignoreUIError,
+    );
+  }
+
+  Future<GlobalPolicyMeta?> _getHookGlobalPolicy(
+    Environment environment,
+    String organizationName,
+    String catalogName,
+    String configuredGatewayName, {
+    String queryParameters = "",
+    HookType hookType = HookType.pre,
+    bool ignoreUIError = false,
+  }) async {
+    final logger = Logger();
+    GlobalPolicyMeta? globalPolicyMeta;
+    try {
+      // await AuthService.getInstance().introspectAndLogin(environment);
+
+      String hookTypeString = hookType == HookType.pre ? "prehook" : "posthook";
+      String url =
+          '${environment.serverURL}/api/catalogs/$organizationName/$catalogName/configured-gateway-services/$configuredGatewayName/global-policy-$hookTypeString?$queryParameters';
+
+      HTTPHeaders headers = HTTPHeaders(
+        accept: 'application/json',
+        authorization: environment.accessToken,
+      );
+
+      var httpResponse = await HTTPUtilites.getInstance()
+          .get(url, headers.typedJson, ignoreUIError: ignoreUIError);
+
+      if (httpResponse != null && httpResponse.statusCode == 401) {
+        final accessToken = await AuthService.getInstance().login(
+          clientID: environment.clientID,
+          clientSecret: environment.clientSecret,
+          serverURL: environment.serverURL,
+          username: environment.username,
+          password: environment.password,
+        );
+        environment.accessToken = accessToken;
+        headers.authorization = accessToken;
+        httpResponse = await HTTPUtilites.getInstance()
+            .get(url, headers.typedJson, ignoreUIError: ignoreUIError);
+      }
+
+      if (httpResponse != null && httpResponse.statusCode == 200) {
+        final jsonResponseBody = json.decode(httpResponse.body);
+        globalPolicyMeta = GlobalPolicyMeta.fromJson(jsonResponseBody);
+        logger.i("GlobalPoliciesService:_getHookGlobalPolicy");
+      }
+    } catch (error, stackTrace) {
+      logger.e("GlobalPoliciesService:_getHookGlobalPolicy", error, stackTrace);
+      ErrorHandlingUtilities.instance.showPopUpError(error.toString());
+    }
+    return globalPolicyMeta;
+  }
+
+  Future<bool> deleteGlobalPolicy({
+    required Environment environment,
+    required String organizationName,
+    required String catalogName,
+    required String configuredGatewayName,
+    required String globalPolicyName,
+    required String globalPolicyVersion,
+    String queryParameters = "",
+    ignoreUIError = false,
+  }) async {
+    final logger = Logger();
+    try {
+      // await AuthService.getInstance().introspectAndLogin(environment);
+
+      String url =
+          '${environment.serverURL}/api/catalogs/$organizationName/$catalogName/configured-gateway-services/$configuredGatewayName/global-policies/$globalPolicyName/$globalPolicyVersion?$queryParameters';
+
+      HTTPHeaders headers = HTTPHeaders(
+        accept: 'application/json',
+        authorization: environment.accessToken,
+      );
+
+      var httpResponse = await HTTPUtilites.getInstance()
+          .delete(url, headers.typedJson, ignoreUIError: ignoreUIError);
+
+      if (httpResponse != null && httpResponse.statusCode == 401) {
+        final accessToken = await AuthService.getInstance().login(
+          clientID: environment.clientID,
+          clientSecret: environment.clientSecret,
+          serverURL: environment.serverURL,
+          username: environment.username,
+          password: environment.password,
+        );
+        environment.accessToken = accessToken;
+        headers.authorization = accessToken;
+        httpResponse = await HTTPUtilites.getInstance()
+            .delete(url, headers.typedJson, ignoreUIError: ignoreUIError);
+      }
+
+      if (httpResponse != null && httpResponse.statusCode == 200) {
+        return true;
+      }
+    } catch (error, stackTrace) {
+      logger.e("GlobalPoliciesService:listGlobalPolicies", error, stackTrace);
+      ErrorHandlingUtilities.instance.showPopUpError(error.toString());
+    }
+    return false;
+  }
+
+  Future<bool> deletePrehookGlobalPolicy({
+    required Environment environment,
+    required String organizationName,
+    required String catalogName,
+    required String configuredGatewayName,
+    String queryParameters = "",
+    bool ignoreUIError = false,
+  }) async {
+    return _deleteHookGlobalPolicy(
+      environment: environment,
+      organizationName: organizationName,
+      catalogName: catalogName,
+      configuredGatewayName: configuredGatewayName,
+      hookType: HookType.pre,
+      queryParameters: queryParameters,
+      ignoreUIError: ignoreUIError,
+    );
+  }
+
+  Future<bool> deletePosthookGlobalPolicy({
+    required Environment environment,
+    required String organizationName,
+    required String catalogName,
+    required String configuredGatewayName,
+    String queryParameters = "",
+    bool ignoreUIError = false,
+  }) async {
+    return _deleteHookGlobalPolicy(
+      environment: environment,
+      organizationName: organizationName,
+      catalogName: catalogName,
+      configuredGatewayName: configuredGatewayName,
+      hookType: HookType.post,
+      queryParameters: queryParameters,
+      ignoreUIError: ignoreUIError,
+    );
+  }
+
+  Future<bool> _deleteHookGlobalPolicy({
+    required Environment environment,
+    required String organizationName,
+    required String catalogName,
+    required String configuredGatewayName,
+    String queryParameters = "",
+    HookType hookType = HookType.pre,
+    bool ignoreUIError = false,
+  }) async {
+    final logger = Logger();
+    try {
+      // await AuthService.getInstance().introspectAndLogin(environment);
+
+      String hookTypeString = hookType == HookType.pre ? "prehook" : "posthook";
+      String url =
+          '${environment.serverURL}/api/catalogs/$organizationName/$catalogName/configured-gateway-services/$configuredGatewayName/global-policy-$hookTypeString?$queryParameters';
+
+      HTTPHeaders headers = HTTPHeaders(
+        accept: 'application/json',
+        authorization: environment.accessToken,
+      );
+
+      var httpResponse = await HTTPUtilites.getInstance()
+          .delete(url, headers.typedJson, ignoreUIError: ignoreUIError);
+
+      if (httpResponse != null && httpResponse.statusCode == 401) {
+        final accessToken = await AuthService.getInstance().login(
+          clientID: environment.clientID,
+          clientSecret: environment.clientSecret,
+          serverURL: environment.serverURL,
+          username: environment.username,
+          password: environment.password,
+        );
+        environment.accessToken = accessToken;
+        headers.authorization = accessToken;
+        httpResponse = await HTTPUtilites.getInstance()
+            .delete(url, headers.typedJson, ignoreUIError: ignoreUIError);
+      }
+
+      if (httpResponse != null && httpResponse.statusCode == 200) {
+        return true;
+      }
+    } catch (error, stackTrace) {
+      logger.e("GlobalPoliciesService:listGlobalPolicies", error, stackTrace);
+      ErrorHandlingUtilities.instance.showPopUpError(error.toString());
+    }
+    return false;
+  }
+}

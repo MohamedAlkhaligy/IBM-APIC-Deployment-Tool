@@ -1,0 +1,14 @@
+{
+    "headers": {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+    },
+    "body": {
+        "client_id": "599b7aef-8841-4ee2-88a0-84d49c4d6ff2",
+        "client_secret": "0ea28423-e73b-47d4-b40e-ddb45c48bb0c",
+        "grant_type": "password",
+        "password": "",
+        "realm": "",
+        "username": ""
+    }
+}
