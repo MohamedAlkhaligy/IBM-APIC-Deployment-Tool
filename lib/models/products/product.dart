@@ -41,7 +41,7 @@ class Info {
   @JsonKey(name: 'version')
   final String version;
 
-  @JsonKey(name: 'title')
+  @JsonKey(name: 'title', includeIfNull: false)
   final String? title;
 
   @JsonKey(name: 'name')
@@ -62,16 +62,16 @@ class PlanDetails {
   @JsonKey(name: 'rate-limits')
   final Map<String, Details> rateLimits;
 
-  @JsonKey(name: 'burst-limits')
+  @JsonKey(name: 'burst-limits', includeIfNull: false)
   final Map<String, Details>? burstLimits;
 
-  @JsonKey(name: 'title')
+  @JsonKey(name: 'title', includeIfNull: false)
   final String? title;
 
-  @JsonKey(name: 'description')
+  @JsonKey(name: 'description', includeIfNull: false)
   final String? description;
 
-  @JsonKey(name: 'approval')
+  @JsonKey(name: 'approval', includeIfNull: false)
   final bool? approval;
 
   PlanDetails({
@@ -92,7 +92,7 @@ class Details {
   @JsonKey(name: 'value')
   final String value;
 
-  @JsonKey(name: 'hard-limit')
+  @JsonKey(name: 'hard-limit', includeIfNull: false)
   final bool? hardLimit;
 
   Details({required this.value, this.hardLimit});
@@ -129,7 +129,7 @@ class Visibility {
 class View {
   final String type;
   final List<String> orgs;
-  final List<String> tags;
+  final List<String>? tags;
   final bool enabled;
 
   View({
@@ -147,7 +147,7 @@ class View {
 class Subscribe {
   final String type;
   final List<String> orgs;
-  final List<String> tags;
+  final List<String>? tags;
   final bool enabled;
 
   Subscribe({

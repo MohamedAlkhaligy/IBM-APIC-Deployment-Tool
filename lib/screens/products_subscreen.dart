@@ -1,8 +1,16 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:cross_file/cross_file.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:ibm_apic_dt/errors/openapi_type_not_supported.dart';
+import 'package:ibm_apic_dt/errors/path_not_file_exception.dart';
+import 'package:ibm_apic_dt/models/products/openapi.dart';
+import 'package:ibm_apic_dt/models/products/openapi_info.dart';
+import 'package:ibm_apic_dt/models/products/product_adaptor.dart';
+import 'package:ibm_apic_dt/models/products/product_info.dart';
+import 'package:ibm_apic_dt/services/product_service.dart';
 import 'package:path/path.dart' as path;
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:ibm_apic_dt/models/products/product.dart';
@@ -31,17 +39,37 @@ class ProductsSubScreen extends StatefulWidget {
 }
 
 class _ProductsSubScreenState extends State<ProductsSubScreen> {
-  int _organizationIndex = 0, _catalogIndex = 0;
-  bool _isLoading = false, _isHighlighted = false;
-  bool _isDataLoaded = false;
+  int _organizationIndex = 0, _catalogIndex = 0, productsSelected = 0;
+  bool _isLoading = false, _isHighlighted = false, _isDataLoaded = false;
   List<Organization> orgs = [];
   List<Catalog> catalogs = [];
-  List<Product> products = [];
+  List<ProductInfo> productsInfos = [];
 
-  final String _message = 'Drop products here';
-
+  final _message = 'Drop products here';
   final _searchController = TextEditingController();
   SortType sortType = SortType.recent;
+
+  late final _selectAllButton = Checkbox(
+      checked: true, onChanged: (value) => changeSelectionCallback(false));
+  late final _clearAllButton = Checkbox(
+      checked: false, onChanged: (value) => changeSelectionCallback(true));
+  late final _selectedButton = Checkbox(
+      checked: null, onChanged: (value) => changeSelectionCallback(false));
+
+  void changeSelectionCallback(bool? state) {
+    if (state == false) {
+      productsSelected = 0;
+    } else if (state = true) {
+      productsSelected = productsInfos.length;
+    }
+    setState(
+      () {
+        for (var product in productsInfos) {
+          product.isSelected = state ?? product.isSelected;
+        }
+      },
+    );
+  }
 
   void _clearData() {
     orgs = [];
@@ -78,23 +106,18 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
     catalogs = await CatalogsService.getInstance().listCatalogs(
         widget.environment, orgs[0].name!,
         queryParameters: "fields=name&fields=title");
-    if (catalogs.isEmpty) return;
   }
 
   Future<void> _loadData() async {
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
     await _loadDataLogic();
-    setState(() {
-      _isLoading = false;
-    });
+    setState(() => _isLoading = false);
   }
 
   @override
   void initState() {
     super.initState();
-    _loadData().then((value) => null);
+    _loadData();
   }
 
   Future<void> _applyOrganizationChanges() async {
@@ -149,6 +172,72 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
       ));
     }
     return catalogsMenu;
+  }
+
+  Widget buildSGlobalSelectionButton() {
+    if (productsSelected == productsInfos.length) {
+      return _selectAllButton;
+    } else if (productsSelected == 0) {
+      return _clearAllButton;
+    }
+    return _selectedButton;
+  }
+
+  Future<void> addProduct(XFile file) async {
+    Map<String, ApiAdaptor> apis = {};
+    List<OpenAPIInfo> openAPIInfos = [];
+    try {
+      // Parse file to product
+      String productAsString = await File(file.path).readAsString();
+      final productAsYaml = loadYaml(productAsString);
+      final productAsJson = jsonDecode(json.encode(productAsYaml));
+      final product = Product.fromJson(productAsJson);
+
+      // Check if the product APIs exist
+
+      product.apis.forEach((key, api) async {
+        String openAPIPath =
+            path.join(path.dirname(file.path), api.ref.replaceAll("/", "\\"));
+        if (!await FileSystemEntity.isFile(openAPIPath)) {
+          throw PathNotFileException(
+              "One or more oh the API paths provided in the ${product.info.name}:${product.info.version} are not valid file path");
+        }
+
+        String openAPIFilename = basename(openAPIPath);
+        if (!RegExp("^.*.(yaml|yml)\$")
+            .hasMatch(openAPIFilename.toLowerCase())) {
+          throw OpenAPITypeNotSupported(
+              "One or more oh the API paths provided in the ${product.info.name}:${product.info.version} are not yaml-based");
+        }
+
+        final openAPIAsString = await File(openAPIPath).readAsString();
+        final openAPIAsYaml = loadYaml(openAPIAsString);
+        final openAPIAsJson = jsonDecode(json.encode(openAPIAsYaml));
+        final openAPI = OpenAPI.fromJson(openAPIAsJson);
+
+        apis[key] =
+            ApiAdaptor(name: "${openAPI.info.name}:${openAPI.info.version}");
+        openAPIInfos.add(
+          OpenAPIInfo(
+              path: openAPIPath,
+              filename: openAPIFilename,
+              name: openAPI.info.name,
+              version: openAPI.info.version),
+        );
+      });
+
+      // Validation Done
+      // Add product to list of products
+      productsInfos.add(
+        ProductInfo(
+          openAPIInfos: openAPIInfos,
+          adaptor: ProductAdaptor.fromProduct(product, apis),
+        ),
+      );
+    } catch (error, traceStack) {
+      Logger()
+          .e("ProductsSubScreen:addProduct:${file.name}", error, traceStack);
+    }
   }
 
   @override
@@ -237,45 +326,23 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
                                     try {
                                       setState(() => _isLoading = true);
                                       for (final file in detail.files) {
-                                        print(file.path);
                                         if (await FileSystemEntity.isDirectory(
                                             file.path)) {
                                         } else if (RegExp("^.*.(yaml|yml)\$")
                                             .hasMatch(
                                                 file.name.toLowerCase())) {
-                                          try {
-                                            String fileAsString =
-                                                await File(file.path)
-                                                    .readAsString();
-                                            var doc = loadYaml(fileAsString);
-                                            var jsonString =
-                                                jsonDecode(json.encode(doc));
-                                            var product =
-                                                Product.fromJson(jsonString);
-
-                                            products.add(product);
-                                            print(product.info.name);
-                                          } catch (e) {}
+                                          // Publish product
+                                          await addProduct(file);
                                         }
                                       }
-                                      if (products.isNotEmpty) {
-                                        setState(() {
-                                          _isLoading = false;
-                                          _isDataLoaded = true;
-                                        });
+                                      if (productsInfos.isNotEmpty) {
+                                        _isDataLoaded = true;
                                       } else {
                                         ErrorHandlingUtilities.instance
                                             .showPopUpError(
                                                 "No valid yaml-based product file has been found");
                                       }
-                                      // product.apis.forEach((key, value) async {
-                                      //   String filePath = path.join(
-                                      //       path.dirname(
-                                      //           detail.files.single.path),
-                                      //       value.ref.replaceAll("/", "\\"));
-                                      //   print(filePath);
-                                      //   // print(await File(filePath).readAsString());
-                                      // });
+                                      setState(() => _isLoading = false);
                                     } catch (error, stackTrace) {
                                       Logger().e(
                                           "ProductsSubScreen:DragAndDrop",
@@ -341,6 +408,8 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
                         children: [
                           Row(
                             children: [
+                              buildSGlobalSelectionButton(),
+                              const SizedBox(width: 10),
                               Expanded(
                                 child: TextBox(
                                   controller: _searchController,
@@ -384,20 +453,47 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 4, vertical: 8),
                               child: ListView.builder(
-                                itemCount: products.length,
+                                itemCount: productsInfos.length,
                                 itemBuilder: (ctx, index) {
                                   return ListTile(
+                                    tileColor: ButtonState.all(Colors.grey),
+                                    leading: Checkbox(
+                                      onChanged: (isChecked) => setState(() {
+                                        productsInfos[index].isSelected =
+                                            isChecked ?? false;
+                                        productsSelected +=
+                                            (isChecked ?? false) ? 1 : -1;
+                                      }),
+                                      checked: productsInfos[index].isSelected,
+                                    ),
                                     title: Text(
-                                        products[index].info.title ??
-                                            products[index].info.name,
-                                        textScaleFactor: 1.1),
-                                    subtitle:
-                                        Text(products[index].info.version),
+                                        productsInfos[index]
+                                                .adaptor
+                                                .info
+                                                .title ??
+                                            productsInfos[index]
+                                                .adaptor
+                                                .info
+                                                .name,
+                                        textScaleFactor: 1),
+                                    subtitle: Text(productsInfos[index]
+                                        .adaptor
+                                        .info
+                                        .version),
                                     trailing: Row(
                                       children: [
                                         Button(
                                             child: const Text("Publish"),
-                                            onPressed: () {}),
+                                            onPressed: () {
+                                              ProductService.getInstance()
+                                                  .publish(
+                                                      widget.environment,
+                                                      orgs[_organizationIndex]
+                                                          .name!,
+                                                      catalogs[_catalogIndex]
+                                                          .name,
+                                                      productsInfos[index]);
+                                            }),
                                         const SizedBox(width: 10),
                                         Button(
                                           child: const Text("Subscribe"),

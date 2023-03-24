@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:logger/logger.dart';
 
 import './auth_service.dart';
-import '../global_configurations.dart';
 import '../models/environment.dart';
 import '../models/http_headers.dart';
 import '../models/organizations/list_organizations_response_body.dart';

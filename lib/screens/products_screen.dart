@@ -15,7 +15,7 @@ class ProductsScreen extends StatefulWidget {
 class _ProductsScreenState extends State<ProductsScreen> {
   int _currentIndex = 0;
   int _counter = 0;
-  List<Tab> _tabs = [];
+  final List<Tab> _tabs = [];
 
   Tab generateTab(Key key) {
     late Tab tab;

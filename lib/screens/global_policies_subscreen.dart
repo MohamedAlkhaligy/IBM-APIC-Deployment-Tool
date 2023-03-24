@@ -29,7 +29,7 @@ class GlobalPoliciesSubScreen extends StatefulWidget {
       _GlobalPoliciesSubScreenState();
 }
 
-enum MediaType { yaml, json }
+enum FileMediaType { yaml, json }
 
 enum GlobalPolicyType { none, input, output, both }
 
@@ -43,7 +43,7 @@ class _CustomGlobalPolicyMeta {
 class _GlobalPoliciesSubScreenState extends State<GlobalPoliciesSubScreen> {
   int _organizationIndex = 0, _catalogIndex = 0, _configuredGatewayIndex = 0;
   bool _isLoading = false;
-  MediaType mediaType = MediaType.yaml;
+  FileMediaType mediaType = FileMediaType.yaml;
   List<Organization> orgs = [];
   List<Catalog> catalogs = [];
   List<ConfiguredGateway> configuredGateways = [];

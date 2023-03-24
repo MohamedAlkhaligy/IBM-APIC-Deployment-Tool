@@ -41,6 +41,10 @@ dependencies:
   
   http: ^0.13.5
   
+  # Used for MediaType.parse
+  http_parser: ^4.0.2
+  dio: ^5.0.3
+  
   json_editor: ^0.0.8
   json_annotation: ^4.7.0 # Serialize and Deserialize Json
   yaml: ^3.1.1
@@ -62,6 +66,7 @@ dependencies:
 
   file_picker: ^5.2.5
   filesystem_picker: ^3.1.0
+  cross_file: ^0.3.3+4
 
 dev_dependencies:
   flutter_test:

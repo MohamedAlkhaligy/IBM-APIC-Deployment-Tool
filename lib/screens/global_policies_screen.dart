@@ -15,7 +15,7 @@ class GlobalPoliciesScreen extends StatefulWidget {
 class _GlobalPoliciesScreenState extends State<GlobalPoliciesScreen> {
   int _currentIndex = 0;
   int _counter = 0;
-  List<Tab> _tabs = [];
+  final List<Tab> _tabs = [];
 
   Tab generateTab(Key key) {
     late Tab tab;

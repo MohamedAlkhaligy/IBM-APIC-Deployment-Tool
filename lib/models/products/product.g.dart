@@ -36,11 +36,21 @@ Info _$InfoFromJson(Map<String, dynamic> json) => Info(
       name: json['name'] as String,
     );
 
-Map<String, dynamic> _$InfoToJson(Info instance) => <String, dynamic>{
-      'version': instance.version,
-      'title': instance.title,
-      'name': instance.name,
-    };
+Map<String, dynamic> _$InfoToJson(Info instance) {
+  final val = <String, dynamic>{
+    'version': instance.version,
+  };
+
+  void writeNotNull(String key, dynamic value) {
+    if (value != null) {
+      val[key] = value;
+    }
+  }
+
+  writeNotNull('title', instance.title);
+  val['name'] = instance.name;
+  return val;
+}
 
 PlanDetails _$PlanDetailsFromJson(Map<String, dynamic> json) => PlanDetails(
       rateLimits: (json['rate-limits'] as Map<String, dynamic>).map(
@@ -54,25 +64,44 @@ PlanDetails _$PlanDetailsFromJson(Map<String, dynamic> json) => PlanDetails(
       approval: json['approval'] as bool?,
     );
 
-Map<String, dynamic> _$PlanDetailsToJson(PlanDetails instance) =>
-    <String, dynamic>{
-      'rate-limits': instance.rateLimits.map((k, e) => MapEntry(k, e.toJson())),
-      'burst-limits':
-          instance.burstLimits?.map((k, e) => MapEntry(k, e.toJson())),
-      'title': instance.title,
-      'description': instance.description,
-      'approval': instance.approval,
-    };
+Map<String, dynamic> _$PlanDetailsToJson(PlanDetails instance) {
+  final val = <String, dynamic>{
+    'rate-limits': instance.rateLimits.map((k, e) => MapEntry(k, e.toJson())),
+  };
+
+  void writeNotNull(String key, dynamic value) {
+    if (value != null) {
+      val[key] = value;
+    }
+  }
+
+  writeNotNull('burst-limits',
+      instance.burstLimits?.map((k, e) => MapEntry(k, e.toJson())));
+  writeNotNull('title', instance.title);
+  writeNotNull('description', instance.description);
+  writeNotNull('approval', instance.approval);
+  return val;
+}
 
 Details _$DetailsFromJson(Map<String, dynamic> json) => Details(
       value: json['value'] as String,
       hardLimit: json['hard-limit'] as bool?,
     );
 
-Map<String, dynamic> _$DetailsToJson(Details instance) => <String, dynamic>{
-      'value': instance.value,
-      'hard-limit': instance.hardLimit,
-    };
+Map<String, dynamic> _$DetailsToJson(Details instance) {
+  final val = <String, dynamic>{
+    'value': instance.value,
+  };
+
+  void writeNotNull(String key, dynamic value) {
+    if (value != null) {
+      val[key] = value;
+    }
+  }
+
+  writeNotNull('hard-limit', instance.hardLimit);
+  return val;
+}
 
 Api _$ApiFromJson(Map<String, dynamic> json) => Api(
       ref: json[r'$ref'] as String,
@@ -96,7 +125,7 @@ Map<String, dynamic> _$VisibilityToJson(Visibility instance) =>
 View _$ViewFromJson(Map<String, dynamic> json) => View(
       type: json['type'] as String,
       orgs: (json['orgs'] as List<dynamic>).map((e) => e as String).toList(),
-      tags: (json['tags'] as List<dynamic>).map((e) => e as String).toList(),
+      tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList(),
       enabled: json['enabled'] as bool,
     );
 
@@ -110,7 +139,7 @@ Map<String, dynamic> _$ViewToJson(View instance) => <String, dynamic>{
 Subscribe _$SubscribeFromJson(Map<String, dynamic> json) => Subscribe(
       type: json['type'] as String,
       orgs: (json['orgs'] as List<dynamic>).map((e) => e as String).toList(),
-      tags: (json['tags'] as List<dynamic>).map((e) => e as String).toList(),
+      tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList(),
       enabled: json['enabled'] as bool,
     );
 

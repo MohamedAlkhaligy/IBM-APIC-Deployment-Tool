@@ -18,5 +18,5 @@ class GlobalConfigurations {
     'lightest': SystemTheme.accentColor.lightest,
   };
 
-  static const String proxyURL = "https://localhost:2000";
+  static const String debugginProxyURL = "https://localhost:2000";
 }
