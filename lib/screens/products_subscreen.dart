@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:cross_file/cross_file.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:ibm_apic_dt/controllers/products_controller.dart';
 import 'package:ibm_apic_dt/errors/openapi_type_not_supported.dart';
 import 'package:ibm_apic_dt/errors/path_not_file_exception.dart';
 import 'package:ibm_apic_dt/models/products/openapi.dart';
@@ -39,17 +40,13 @@ class ProductsSubScreen extends StatefulWidget {
 }
 
 class _ProductsSubScreenState extends State<ProductsSubScreen> {
-  int _organizationIndex = 0, _catalogIndex = 0, productsSelected = 0;
   bool _isLoading = false,
+      _areFilesLoaded = false,
       _isHighlighted = false,
-      _isDataLoaded = false,
       _isPublishing = false;
-  List<Organization> orgs = [];
-  List<Catalog> catalogs = [];
-  List<ProductInfo> productsInfos = [];
-
   final _message = 'Drop products here';
   final _searchController = TextEditingController();
+  late final ProductController _productController;
   SortType sortType = SortType.recent;
 
   late final _selectAllButton = Checkbox(
@@ -61,91 +58,48 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
 
   void changeSelectionCallback(bool? state) {
     if (state == false) {
-      productsSelected = 0;
+      _productController.productsSelected = 0;
     } else if (state = true) {
-      productsSelected = productsInfos.length;
+      _productController.productsSelected =
+          _productController.productsInfos.length;
     }
     setState(
       () {
-        for (var product in productsInfos) {
+        for (var product in _productController.productsInfos) {
           product.isSelected = state ?? product.isSelected;
         }
       },
     );
   }
 
-  void _clearData() {
-    orgs = [];
-    catalogs = [];
-  }
-
-  bool _areDataAvailable() {
-    return orgs.isNotEmpty && catalogs.isNotEmpty;
-  }
-
   Future<void> _refreshData() async {
     setState(() {
       _isLoading = true;
     });
-    _clearData();
-    orgs = await OrganizationsService.getInstance().listOrgs(widget.environment,
-        queryParameters: "fields=name&fields=title&fields=owner_url");
-    if (orgs.isEmpty || _organizationIndex >= orgs.length) return;
-
-    catalogs = await CatalogsService.getInstance().listCatalogs(
-        widget.environment, orgs[_organizationIndex].name!,
-        queryParameters: "fields=name&fields=title");
-    if (catalogs.isEmpty || _catalogIndex >= catalogs.length) return;
+    await _productController.refreshData();
     setState(() {
       _isLoading = false;
     });
   }
 
-  Future<void> _loadDataLogic() async {
-    orgs = await OrganizationsService.getInstance().listOrgs(widget.environment,
-        queryParameters: "fields=name&fields=title&fields=owner_url");
-    if (orgs.isEmpty) return;
-
-    catalogs = await CatalogsService.getInstance().listCatalogs(
-        widget.environment, orgs[0].name!,
-        queryParameters: "fields=name&fields=title");
-  }
-
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    await _loadDataLogic();
+    await _productController.loadData();
     setState(() => _isLoading = false);
   }
 
   @override
   void initState() {
     super.initState();
+    _productController = ProductController(widget.environment);
     _loadData();
-  }
-
-  Future<void> _applyOrganizationChanges() async {
-    _catalogIndex = 0;
-    catalogs = await CatalogsService.getInstance().listCatalogs(
-        widget.environment, orgs[_organizationIndex].name!,
-        queryParameters: "fields=name&fields=title");
-    if (catalogs.isEmpty) return;
   }
 
   void _applyChange(ChangeType changeType) async {
     setState(() {
       _isLoading = true;
     });
-    switch (changeType) {
-      case ChangeType.organization:
-        await _applyOrganizationChanges();
-        break;
-      case ChangeType.catalog:
-        break;
-      case ChangeType.configuredGateway:
-        break;
-      case ChangeType.mediaType:
-        break;
-    }
+    await _productController.applyChange(ChangeType.catalog);
     setState(() {
       _isLoading = false;
     });
@@ -153,11 +107,11 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
 
   List<ComboBoxItem<int>> _buildOrgsMenu() {
     List<ComboBoxItem<int>> orgsMenu = [];
-    for (int i = 0; i < orgs.length; i++) {
+    for (int i = 0; i < _productController.orgs.length; i++) {
       orgsMenu.add(ComboBoxItem(
         value: i,
         child: ResponsiveText(
-          orgs[i].title!,
+          _productController.orgs[i].title!,
         ),
       ));
     }
@@ -166,81 +120,25 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
 
   List<ComboBoxItem<int>> _buildCatalogsMenu() {
     List<ComboBoxItem<int>> catalogsMenu = [];
-    for (int i = 0; i < catalogs.length; i++) {
+    for (int i = 0; i < _productController.catalogs.length; i++) {
       catalogsMenu.add(ComboBoxItem(
         value: i,
         child: ResponsiveText(
-          catalogs[i].title!,
+          _productController.catalogs[i].title!,
         ),
       ));
     }
     return catalogsMenu;
   }
 
-  Widget buildSGlobalSelectionButton() {
-    if (productsSelected == productsInfos.length) {
+  Widget _buildSGlobalSelectionButton() {
+    if (_productController.productsSelected ==
+        _productController.productsInfos.length) {
       return _selectAllButton;
-    } else if (productsSelected == 0) {
+    } else if (_productController.productsSelected == 0) {
       return _clearAllButton;
     }
     return _selectedButton;
-  }
-
-  Future<void> addProduct(XFile file) async {
-    Map<String, ApiAdaptor> apis = {};
-    List<OpenAPIInfo> openAPIInfos = [];
-    try {
-      // Parse file to product
-      String productAsString = await File(file.path).readAsString();
-      final productAsYaml = loadYaml(productAsString);
-      final productAsJson = jsonDecode(json.encode(productAsYaml));
-      final product = Product.fromJson(productAsJson);
-
-      // Check if the product APIs exist
-
-      product.apis.forEach((key, api) async {
-        String openAPIPath =
-            path.join(path.dirname(file.path), api.ref.replaceAll("/", "\\"));
-        if (!await FileSystemEntity.isFile(openAPIPath)) {
-          throw PathNotFileException(
-              "One or more oh the API paths provided in the ${product.info.name}:${product.info.version} are not valid file path");
-        }
-
-        String openAPIFilename = basename(openAPIPath);
-        if (!RegExp("^.*.(yaml|yml)\$")
-            .hasMatch(openAPIFilename.toLowerCase())) {
-          throw OpenAPITypeNotSupported(
-              "One or more oh the API paths provided in the ${product.info.name}:${product.info.version} are not yaml-based");
-        }
-
-        final openAPIAsString = await File(openAPIPath).readAsString();
-        final openAPIAsYaml = loadYaml(openAPIAsString);
-        final openAPIAsJson = jsonDecode(json.encode(openAPIAsYaml));
-        final openAPI = OpenAPI.fromJson(openAPIAsJson);
-
-        apis[key] =
-            ApiAdaptor(name: "${openAPI.info.name}:${openAPI.info.version}");
-        openAPIInfos.add(
-          OpenAPIInfo(
-              path: openAPIPath,
-              filename: openAPIFilename,
-              name: openAPI.info.name,
-              version: openAPI.info.version),
-        );
-      });
-
-      // Validation Done
-      // Add product to list of products
-      productsInfos.add(
-        ProductInfo(
-          openAPIInfos: openAPIInfos,
-          adaptor: ProductAdaptor.fromProduct(product, apis),
-        ),
-      );
-    } catch (error, traceStack) {
-      Logger()
-          .e("ProductsSubScreen:addProduct:${file.name}", error, traceStack);
-    }
   }
 
   @override
@@ -260,20 +158,20 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
                       children: [
                         const Text("Organization: "),
                         ComboBox<int>(
-                          value: _organizationIndex,
+                          value: _productController.organizationIndex,
                           items: _buildOrgsMenu(),
                           onChanged: (index) => setState(() {
-                            _organizationIndex = index!;
+                            _productController.organizationIndex = index!;
                             _applyChange(ChangeType.organization);
                           }),
                         ),
                         const SizedBox(width: 10),
                         const Text("Catalog: "),
                         ComboBox<int>(
-                          value: _catalogIndex,
+                          value: _productController.catalogIndex,
                           items: _buildCatalogsMenu(),
                           onChanged: (index) => setState(() {
-                            _catalogIndex = index!;
+                            _productController.catalogIndex = index!;
                             _applyChange(ChangeType.catalog);
                           }),
                         ),
@@ -308,7 +206,7 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
                   ],
                 ),
                 const SizedBox(height: 15),
-                !_isDataLoaded
+                !_areFilesLoaded
                     ? Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -335,11 +233,13 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
                                             .hasMatch(
                                                 file.name.toLowerCase())) {
                                           // Publish product
-                                          await addProduct(file);
+                                          await _productController
+                                              .addProduct(file);
                                         }
                                       }
-                                      if (productsInfos.isNotEmpty) {
-                                        _isDataLoaded = true;
+                                      if (_productController
+                                          .productsInfos.isNotEmpty) {
+                                        _areFilesLoaded = true;
                                       } else {
                                         ErrorHandlingUtilities.instance
                                             .showPopUpError(
@@ -411,7 +311,7 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
                         children: [
                           Row(
                             children: [
-                              buildSGlobalSelectionButton(),
+                              _buildSGlobalSelectionButton(),
                               const SizedBox(width: 10),
                               Expanded(
                                 child: TextBox(
@@ -458,7 +358,8 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
                               child: _isPublishing
                                   ? const Loader()
                                   : ListView.builder(
-                                      itemCount: productsInfos.length,
+                                      itemCount: _productController
+                                          .productsInfos.length,
                                       itemBuilder: (ctx, index) {
                                         return ListTile(
                                           tileColor:
@@ -466,25 +367,32 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
                                           leading: Checkbox(
                                             onChanged: (isChecked) =>
                                                 setState(() {
-                                              productsInfos[index].isSelected =
+                                              _productController
+                                                      .productsInfos[index]
+                                                      .isSelected =
                                                   isChecked ?? false;
-                                              productsSelected +=
+                                              _productController
+                                                      .productsSelected +=
                                                   (isChecked ?? false) ? 1 : -1;
                                             }),
-                                            checked:
-                                                productsInfos[index].isSelected,
+                                            checked: _productController
+                                                .productsInfos[index]
+                                                .isSelected,
                                           ),
                                           title: Text(
-                                              productsInfos[index]
+                                              _productController
+                                                      .productsInfos[index]
                                                       .adaptor
                                                       .info
                                                       .title ??
-                                                  productsInfos[index]
+                                                  _productController
+                                                      .productsInfos[index]
                                                       .adaptor
                                                       .info
                                                       .name,
                                               textScaleFactor: 1),
-                                          subtitle: Text(productsInfos[index]
+                                          subtitle: Text(_productController
+                                              .productsInfos[index]
                                               .adaptor
                                               .info
                                               .version),
@@ -500,24 +408,15 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
                                                               context: context,
                                                               builder: (ctx) {
                                                                 return ConfirmationPopUp(
-                                                                    "Do you want to publish ${productsInfos[index].adaptor.info.name}:${productsInfos[index].adaptor.info.version}");
+                                                                    "Do you want to publish ${_productController.productsInfos[index].adaptor.info.name}:${_productController.productsInfos[index].adaptor.info.version}");
                                                               },
                                                             ) ??
                                                             false;
                                                     setState(() =>
                                                         _isPublishing = true);
                                                     if (isConfirmed) {
-                                                      await ProductService.getInstance()
-                                                          .publish(
-                                                              widget
-                                                                  .environment,
-                                                              orgs[_organizationIndex]
-                                                                  .name!,
-                                                              catalogs[
-                                                                      _catalogIndex]
-                                                                  .name,
-                                                              productsInfos[
-                                                                  index]);
+                                                      await _productController
+                                                          .publish(index);
                                                     }
                                                     setState(() =>
                                                         _isPublishing = false);
