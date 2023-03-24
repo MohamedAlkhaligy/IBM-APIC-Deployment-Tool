@@ -66,6 +66,34 @@ class ProductController {
         productsInfos[index]);
   }
 
+  Future<void> publishSelected() async {
+    if (_productsSelected == 0) {
+      ErrorHandlingUtilities.instance
+          .showPopUpError("Please select a product to publish!");
+    } else {
+      for (final productInfos in productsInfos) {
+        if (productInfos.isSelected) {
+          final hasPublished = await ProductService.getInstance().publish(
+            _environment,
+            orgs[_organizationIndex].name!,
+            catalogs[_catalogIndex].name,
+            productInfos,
+          );
+
+          if (!hasPublished) {
+            bool isContinue = await ErrorHandlingUtilities.instance
+                    .showPopUpErrorWithDilemma(
+                        "An error occured while publishing ${productInfos.adaptor.info.name}:${productInfos.adaptor.info.version}. Do you wish to continue with other products?") ??
+                false;
+            if (!isContinue) {
+              break;
+            }
+          }
+        }
+      }
+    }
+  }
+
   Future<void> refreshData() async {
     _clearData();
     orgs = await OrganizationsService.getInstance().listOrgs(_environment,
