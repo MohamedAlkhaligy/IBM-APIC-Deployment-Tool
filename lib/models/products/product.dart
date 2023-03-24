@@ -129,7 +129,9 @@ class Visibility {
 class View {
   final String type;
   final List<String> orgs;
-  final List<String>? tags;
+
+  @JsonKey(name: 'tags', defaultValue: [])
+  final List<String> tags;
   final bool enabled;
 
   View({
@@ -147,7 +149,9 @@ class View {
 class Subscribe {
   final String type;
   final List<String> orgs;
-  final List<String>? tags;
+
+  @JsonKey(name: 'tags', defaultValue: [])
+  final List<String> tags;
   final bool enabled;
 
   Subscribe({

@@ -125,7 +125,9 @@ Map<String, dynamic> _$VisibilityToJson(Visibility instance) =>
 View _$ViewFromJson(Map<String, dynamic> json) => View(
       type: json['type'] as String,
       orgs: (json['orgs'] as List<dynamic>).map((e) => e as String).toList(),
-      tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList(),
+      tags:
+          (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ??
+              [],
       enabled: json['enabled'] as bool,
     );
 
@@ -139,7 +141,9 @@ Map<String, dynamic> _$ViewToJson(View instance) => <String, dynamic>{
 Subscribe _$SubscribeFromJson(Map<String, dynamic> json) => Subscribe(
       type: json['type'] as String,
       orgs: (json['orgs'] as List<dynamic>).map((e) => e as String).toList(),
-      tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList(),
+      tags:
+          (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ??
+              [],
       enabled: json['enabled'] as bool,
     );
 
