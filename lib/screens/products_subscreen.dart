@@ -40,7 +40,10 @@ class ProductsSubScreen extends StatefulWidget {
 
 class _ProductsSubScreenState extends State<ProductsSubScreen> {
   int _organizationIndex = 0, _catalogIndex = 0, productsSelected = 0;
-  bool _isLoading = false, _isHighlighted = false, _isDataLoaded = false;
+  bool _isLoading = false,
+      _isHighlighted = false,
+      _isDataLoaded = false,
+      _isPublishing = false;
   List<Organization> orgs = [];
   List<Catalog> catalogs = [];
   List<ProductInfo> productsInfos = [];
@@ -452,58 +455,83 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
                               ),
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 4, vertical: 8),
-                              child: ListView.builder(
-                                itemCount: productsInfos.length,
-                                itemBuilder: (ctx, index) {
-                                  return ListTile(
-                                    tileColor: ButtonState.all(Colors.grey),
-                                    leading: Checkbox(
-                                      onChanged: (isChecked) => setState(() {
-                                        productsInfos[index].isSelected =
-                                            isChecked ?? false;
-                                        productsSelected +=
-                                            (isChecked ?? false) ? 1 : -1;
-                                      }),
-                                      checked: productsInfos[index].isSelected,
-                                    ),
-                                    title: Text(
-                                        productsInfos[index]
-                                                .adaptor
-                                                .info
-                                                .title ??
-                                            productsInfos[index]
-                                                .adaptor
-                                                .info
-                                                .name,
-                                        textScaleFactor: 1),
-                                    subtitle: Text(productsInfos[index]
-                                        .adaptor
-                                        .info
-                                        .version),
-                                    trailing: Row(
-                                      children: [
-                                        Button(
-                                            child: const Text("Publish"),
-                                            onPressed: () {
-                                              ProductService.getInstance()
-                                                  .publish(
-                                                      widget.environment,
-                                                      orgs[_organizationIndex]
-                                                          .name!,
-                                                      catalogs[_catalogIndex]
-                                                          .name,
-                                                      productsInfos[index]);
+                              child: _isPublishing
+                                  ? const Loader()
+                                  : ListView.builder(
+                                      itemCount: productsInfos.length,
+                                      itemBuilder: (ctx, index) {
+                                        return ListTile(
+                                          tileColor:
+                                              ButtonState.all(Colors.grey),
+                                          leading: Checkbox(
+                                            onChanged: (isChecked) =>
+                                                setState(() {
+                                              productsInfos[index].isSelected =
+                                                  isChecked ?? false;
+                                              productsSelected +=
+                                                  (isChecked ?? false) ? 1 : -1;
                                             }),
-                                        const SizedBox(width: 10),
-                                        Button(
-                                          child: const Text("Subscribe"),
-                                          onPressed: () {},
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                },
-                              )),
+                                            checked:
+                                                productsInfos[index].isSelected,
+                                          ),
+                                          title: Text(
+                                              productsInfos[index]
+                                                      .adaptor
+                                                      .info
+                                                      .title ??
+                                                  productsInfos[index]
+                                                      .adaptor
+                                                      .info
+                                                      .name,
+                                              textScaleFactor: 1),
+                                          subtitle: Text(productsInfos[index]
+                                              .adaptor
+                                              .info
+                                              .version),
+                                          trailing: Row(
+                                            children: [
+                                              Button(
+                                                  child: const Text("Publish"),
+                                                  onPressed: () async {
+                                                    final isConfirmed =
+                                                        await showDialog<bool>(
+                                                              barrierDismissible:
+                                                                  true,
+                                                              context: context,
+                                                              builder: (ctx) {
+                                                                return ConfirmationPopUp(
+                                                                    "Do you want to publish ${productsInfos[index].adaptor.info.name}:${productsInfos[index].adaptor.info.version}");
+                                                              },
+                                                            ) ??
+                                                            false;
+                                                    setState(() =>
+                                                        _isPublishing = true);
+                                                    if (isConfirmed) {
+                                                      await ProductService.getInstance()
+                                                          .publish(
+                                                              widget
+                                                                  .environment,
+                                                              orgs[_organizationIndex]
+                                                                  .name!,
+                                                              catalogs[
+                                                                      _catalogIndex]
+                                                                  .name,
+                                                              productsInfos[
+                                                                  index]);
+                                                    }
+                                                    setState(() =>
+                                                        _isPublishing = false);
+                                                  }),
+                                              const SizedBox(width: 10),
+                                              Button(
+                                                child: const Text("Subscribe"),
+                                                onPressed: () {},
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      },
+                                    )),
                         ],
                       )
               ],

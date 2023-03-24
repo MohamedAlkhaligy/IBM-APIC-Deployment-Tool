@@ -11,7 +11,6 @@ import '../utilities/error_handling_utilities.dart';
 import './auth_service.dart';
 import '../models/environment.dart';
 import '../models/http_headers.dart';
-import '../utilities/http_utilities.dart';
 
 class ProductService {
   static final _productService = ProductService._internal();
@@ -43,18 +42,20 @@ class ProductService {
         authorization: environment.accessToken,
       );
 
-      final List<MapEntry<String, MultipartFile>> files = [];
       final String productFilename = "$id.json";
       print(Directory.current);
-      final file =
+      final productJsonFile =
           await File("${Directory.current.path}\\temp\\$productFilename")
               .create();
-      await file.writeAsString(json.encode(productInfo.adaptor.toJson()));
+      await productJsonFile
+          .writeAsString(json.encode(productInfo.adaptor.toJson()));
+
+      final List<MapEntry<String, MultipartFile>> files = [];
       files.add(
         MapEntry(
           "product",
           MultipartFile.fromFileSync(
-            file.path,
+            productJsonFile.path,
             filename: productFilename,
             contentType: MediaType.parse('application/json'),
           ),
@@ -103,14 +104,16 @@ class ProductService {
           httpResponse = await dio.post(url, data: formData);
         }
 
-        if (httpResponse.statusCode == 200) {
+        if (httpResponse.statusCode == 201) {
+          productJsonFile.delete();
           return true;
         }
       } catch (error, stackTrace) {
         logger.e("HTTPAccessUtilites:post", error, stackTrace);
         ErrorHandlingUtilities.instance.showPopUpError(
-          error.toString(),
+          "${productInfo.adaptor.info.name}:${productInfo.adaptor.info.version}\n$error",
         );
+        productJsonFile.delete();
       }
     } catch (error, stackTrace) {
       logger.e("ProductService:publish", error, stackTrace);
