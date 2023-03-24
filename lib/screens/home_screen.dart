@@ -1,9 +1,9 @@
 import 'package:fluent_ui/fluent_ui.dart';
-import 'package:ibm_apic_dt/global_configurations.dart';
-import 'package:ibm_apic_dt/models/environment.dart';
 import 'package:provider/provider.dart';
 
 import './add_environment_screen.dart';
+import '../global_configurations.dart';
+import '../models/environment.dart';
 import '../providers/environments_provider.dart';
 import '../widgets/add_environment_block.dart';
 import '../widgets/environment_block.dart';

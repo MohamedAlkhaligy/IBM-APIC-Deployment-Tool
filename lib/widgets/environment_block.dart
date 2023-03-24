@@ -1,10 +1,10 @@
 import 'package:fluent_ui/fluent_ui.dart';
-import 'package:ibm_apic_dt/providers/environments_provider.dart';
-import 'package:ibm_apic_dt/widgets/confirmation_pop_up.dart';
 import 'package:intl/intl.dart';
 
+import './confirmation_pop_up.dart';
 import './responsive_text.dart';
 import '../models/environment.dart';
+import '../providers/environments_provider.dart';
 import '../screens/environment_screen.dart';
 
 class EnvironmentBlock extends StatefulWidget {

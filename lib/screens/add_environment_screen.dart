@@ -1,15 +1,15 @@
 import 'package:fluent_ui/fluent_ui.dart';
-import 'package:ibm_apic_dt/models/environment.dart';
-import 'package:ibm_apic_dt/screens/home_screen.dart';
-import 'package:ibm_apic_dt/widgets/loader.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 
+import './home_screen.dart';
+import '../models/environment.dart';
 import '../providers/environments_provider.dart';
 import '../services/auth_service.dart';
 import '../utilities/error_handling_utilities.dart';
 import '../widgets/home_app_bar.dart';
+import '../widgets/loader.dart';
 
 class AddEnvironmentScreen extends StatefulWidget {
   const AddEnvironmentScreen({super.key});
