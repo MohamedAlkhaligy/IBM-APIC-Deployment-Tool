@@ -3,7 +3,9 @@ import 'package:fluent_ui/fluent_ui.dart';
 import '../screens/home_screen.dart';
 
 class HomeAppBar extends StatelessWidget {
-  const HomeAppBar({super.key});
+  final String text;
+
+  const HomeAppBar({this.text = "IBM API Connect Deployment Tool", super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +18,7 @@ class HomeAppBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text("IBM API Connect Deployment Tool"),
+          Text(text),
           IconButton(
             icon: const Icon(
               FluentIcons.home,

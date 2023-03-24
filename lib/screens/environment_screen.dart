@@ -38,7 +38,9 @@ class _EnvironmentScreenState extends State<EnvironmentScreen> {
   Widget build(BuildContext context) {
     return ScaffoldPage(
       padding: EdgeInsets.zero,
-      header: const HomeAppBar(),
+      header: HomeAppBar(
+        text: "${widget.environment.environmentName} Environment",
+      ),
       content: TabView(
         tabs: _tabs,
         currentIndex: _currentIndex,
