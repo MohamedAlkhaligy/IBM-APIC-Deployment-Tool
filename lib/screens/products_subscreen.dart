@@ -1,30 +1,8 @@
-import 'dart:convert';
-import 'dart:io';
-
-import 'package:cross_file/cross_file.dart';
 import 'package:desktop_drop/desktop_drop.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:ibm_apic_dt/controllers/products_controller.dart';
-import 'package:ibm_apic_dt/errors/openapi_type_not_supported.dart';
-import 'package:ibm_apic_dt/errors/path_not_file_exception.dart';
-import 'package:ibm_apic_dt/models/products/openapi.dart';
-import 'package:ibm_apic_dt/models/products/openapi_info.dart';
-import 'package:ibm_apic_dt/models/products/product_adaptor.dart';
-import 'package:ibm_apic_dt/models/products/product_info.dart';
-import 'package:ibm_apic_dt/services/product_service.dart';
-import 'package:path/path.dart' as path;
 import 'package:fluent_ui/fluent_ui.dart';
-import 'package:ibm_apic_dt/models/products/product.dart';
-import 'package:logger/logger.dart';
-import 'package:path/path.dart';
-import 'package:yaml/yaml.dart';
+
+import '../controllers/products_controller.dart';
 import '../models/environment.dart';
-import '../models/organizations/organization.dart';
-import '../models/catalogs/catalog.dart';
-import '../services/catalogs_service.dart';
-import '../services/global_policies_service.dart';
-import '../services/organization_service.dart';
-import '../utilities/error_handling_utilities.dart';
 import '../widgets/confirmation_pop_up.dart';
 import '../widgets/loader.dart';
 import '../global_configurations.dart';
@@ -224,36 +202,10 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
                               children: [
                                 DropTarget(
                                   onDragDone: (detail) async {
-                                    try {
-                                      setState(() => _isLoading = true);
-                                      for (final file in detail.files) {
-                                        if (await FileSystemEntity.isDirectory(
-                                            file.path)) {
-                                        } else if (RegExp("^.*.(yaml|yml)\$")
-                                            .hasMatch(
-                                                file.name.toLowerCase())) {
-                                          // Publish product
-                                          await _productController
-                                              .addProduct(file);
-                                        }
-                                      }
-                                      if (_productController
-                                          .productsInfos.isNotEmpty) {
-                                        _areFilesLoaded = true;
-                                      } else {
-                                        ErrorHandlingUtilities.instance
-                                            .showPopUpError(
-                                                "No valid yaml-based product file has been found");
-                                      }
-                                      setState(() => _isLoading = false);
-                                    } catch (error, stackTrace) {
-                                      Logger().e(
-                                          "ProductsSubScreen:DragAndDrop",
-                                          error,
-                                          stackTrace);
-                                      ErrorHandlingUtilities.instance
-                                          .showPopUpError(error.toString());
-                                    }
+                                    setState(() => _isLoading = true);
+                                    _areFilesLoaded = await _productController
+                                        .loadProducts(detail.files);
+                                    setState(() => _isLoading = false);
                                   },
                                   onDragEntered: (details) =>
                                       setState(() => _isHighlighted = true),

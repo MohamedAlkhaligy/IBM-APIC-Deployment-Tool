@@ -1,5 +1,6 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:ibm_apic_dt/global_configurations.dart';
+import 'package:ibm_apic_dt/models/environment.dart';
 import 'package:provider/provider.dart';
 
 import './add_environment_screen.dart';
@@ -23,6 +24,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final _searchController = TextEditingController();
   SortType sortType = SortType.recent;
   SearchType searchType = SearchType.environmentName;
+  List<Environment> _environments = [];
 
   String searchPlaceholder(SearchType type) {
     switch (type) {
@@ -31,6 +33,25 @@ class _HomeScreenState extends State<HomeScreen> {
       // To be supported
       case SearchType.username:
         return "Search environments by username";
+    }
+  }
+
+  void _sort(List<Environment> environments, SortType sortType) {
+    switch (sortType) {
+      case SortType.ascending:
+        environments
+            .sort((a, b) => a.environmentName.compareTo(b.environmentName));
+        break;
+      case SortType.created:
+        environments.sort((a, b) => a.creationTime.compareTo(b.creationTime));
+        break;
+      case SortType.descending:
+        environments
+            .sort((a, b) => b.environmentName.compareTo(a.environmentName));
+        break;
+      case SortType.recent:
+        environments.sort((a, b) => b.lastVisited.compareTo(a.lastVisited));
+        break;
     }
   }
 
@@ -74,66 +95,80 @@ class _HomeScreenState extends State<HomeScreen> {
                   borderRadius: BorderRadius.circular(15),
                   color: Colors.black.withOpacity(0.1),
                 ),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextBox(
-                            controller: _searchController,
-                            placeholder: searchPlaceholder(searchType),
+                child: Consumer<EnvironmentsProvider>(
+                    builder: (context, environmentsProvider, child) {
+                  _environments = environmentsProvider.environments;
+                  _sort(_environments, sortType);
+                  _environments = _environments
+                      .where((element) => element.environmentName
+                          .toLowerCase()
+                          .contains(
+                              _searchController.text.toLowerCase().trim()))
+                      .toList();
+                  return Column(
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextBox(
+                              controller: _searchController,
+                              placeholder: searchPlaceholder(searchType),
+                              onChanged: (name) => setState(() {}),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          ComboBox<SortType>(
+                            items: const [
+                              ComboBoxItem(
+                                value: SortType.ascending,
+                                child: Text("Ascending"),
+                              ),
+                              ComboBoxItem(
+                                value: SortType.created,
+                                child: Text("Created"),
+                              ),
+                              ComboBoxItem(
+                                value: SortType.descending,
+                                child: Text("Descending"),
+                              ),
+                              ComboBoxItem(
+                                value: SortType.recent,
+                                child: Text("Recent"),
+                              )
+                            ],
+                            icon: const Icon(FluentIcons.sort),
+                            iconSize: 15,
+                            onChanged: ((value) {
+                              setState(() {
+                                sortType = value!;
+                                _sort(_environments, sortType);
+                              });
+                            }),
+                            value: sortType,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 15),
+                      SizedBox(
+                        width: screenWidth,
+                        height: screenHeight * 0.68,
+                        child: SingleChildScrollView(
+                          child: Wrap(
+                            spacing: 30,
+                            runSpacing: 30,
+                            children: [
+                              ...(_environments
+                                  .map((environment) => EnvironmentBlock(
+                                      environment, environmentsProvider))
+                                  .toList()),
+                              const AddEnvironmentBlock(),
+                            ],
                           ),
                         ),
-                        const SizedBox(width: 10),
-                        ComboBox<SortType>(
-                          items: const [
-                            ComboBoxItem(
-                              value: SortType.ascending,
-                              child: Text("Ascending"),
-                            ),
-                            ComboBoxItem(
-                              value: SortType.descending,
-                              child: Text("Descending"),
-                            ),
-                            ComboBoxItem(
-                              value: SortType.recent,
-                              child: Text("Recent"),
-                            )
-                          ],
-                          icon: const Icon(FluentIcons.sort),
-                          iconSize: 15,
-                          onChanged: ((value) {
-                            setState(() {
-                              sortType = value!;
-                            });
-                          }),
-                          value: sortType,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 15),
-                    SizedBox(
-                      width: screenWidth,
-                      height: screenHeight * 0.68,
-                      child: SingleChildScrollView(
-                        child: Consumer<EnvironmentsProvider>(
-                          builder: ((context, environmentsProvider, child) =>
-                              Wrap(
-                                spacing: 30,
-                                runSpacing: 30,
-                                children: [
-                                  ...(environmentsProvider.environments
-                                      .map((environment) =>
-                                          EnvironmentBlock(environment))
-                                      .toList()),
-                                  const AddEnvironmentBlock(),
-                                ],
-                              )),
-                        ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  );
+                }),
               ),
             ],
           ),

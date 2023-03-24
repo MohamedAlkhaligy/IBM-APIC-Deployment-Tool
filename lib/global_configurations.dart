@@ -5,7 +5,7 @@ enum Realm { admin, provider }
 
 enum ChangeType { organization, catalog, configuredGateway, mediaType }
 
-enum SortType { ascending, descending, recent }
+enum SortType { ascending, created, descending, recent }
 
 class GlobalConfigurations {
   static Map<String, Color> fluentUISwatch = <String, Color>{

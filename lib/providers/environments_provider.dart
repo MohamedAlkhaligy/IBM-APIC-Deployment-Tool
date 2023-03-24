@@ -24,11 +24,25 @@ class EnvironmentsProvider with ChangeNotifier {
         .firstWhere((environment) => environment.environmentID == id);
   }
 
+  deleteEnvironment(Environment environment) {
+    Environments environments =
+        _environmentsBox.get(ENVIRONMENTS) ?? Environments([]);
+    environments.environments.removeWhere(
+        (element) => environment.environmentID == element.environmentID);
+    _environmentsBox.put(ENVIRONMENTS, environments);
+    notifyListeners();
+  }
+
   addEnvironment(Environment environment) {
     Environments environments =
         _environmentsBox.get(ENVIRONMENTS) ?? Environments([]);
     environments.environments.add(environment);
     _environmentsBox.put(ENVIRONMENTS, environments);
+    notifyListeners();
+  }
+
+  visitEnvironment(Environment environment) {
+    environment.lastVisited = DateTime.now();
     notifyListeners();
   }
 }

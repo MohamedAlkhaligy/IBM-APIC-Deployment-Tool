@@ -1,25 +1,26 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:ibm_apic_dt/errors/openapi_type_not_supported.dart';
-import 'package:ibm_apic_dt/errors/path_not_file_exception.dart';
-import 'package:ibm_apic_dt/models/products/openapi.dart';
-import 'package:ibm_apic_dt/services/product_service.dart';
+import 'package:cross_file/cross_file.dart';
 import 'package:logger/logger.dart';
 import 'package:path/path.dart' as path;
-import 'package:cross_file/cross_file.dart';
-
-import 'package:ibm_apic_dt/global_configurations.dart';
-import 'package:ibm_apic_dt/models/catalogs/catalog.dart';
-import 'package:ibm_apic_dt/models/environment.dart';
-import 'package:ibm_apic_dt/models/organizations/organization.dart';
-import 'package:ibm_apic_dt/models/products/openapi_info.dart';
-import 'package:ibm_apic_dt/models/products/product.dart';
-import 'package:ibm_apic_dt/models/products/product_adaptor.dart';
-import 'package:ibm_apic_dt/models/products/product_info.dart';
-import 'package:ibm_apic_dt/services/catalogs_service.dart';
-import 'package:ibm_apic_dt/services/organization_service.dart';
 import 'package:yaml/yaml.dart';
+
+import '../errors/openapi_type_not_supported.dart';
+import '../errors/path_not_file_exception.dart';
+import '../global_configurations.dart';
+import '../models/catalogs/catalog.dart';
+import '../models/environment.dart';
+import '../models/organizations/organization.dart';
+import '../models/products/openapi.dart';
+import '../models/products/openapi_info.dart';
+import '../models/products/product.dart';
+import '../models/products/product_adaptor.dart';
+import '../models/products/product_info.dart';
+import '../services/catalogs_service.dart';
+import '../services/organization_service.dart';
+import '../services/product_service.dart';
+import '../utilities/error_handling_utilities.dart';
 
 class ProductController {
   int _organizationIndex, _catalogIndex, _productsSelected;
@@ -109,7 +110,30 @@ class ProductController {
     }
   }
 
-  Future<void> addProduct(XFile file) async {
+  Future<bool> loadProducts(List<XFile> files) async {
+    try {
+      for (final file in files) {
+        if (await FileSystemEntity.isDirectory(file.path)) {
+        } else if (RegExp("^.*.(yaml|yml)\$")
+            .hasMatch(file.name.toLowerCase())) {
+          // Publish product
+          await _addProduct(file);
+        }
+      }
+      if (productsInfos.isNotEmpty) {
+        return true;
+      } else {
+        ErrorHandlingUtilities.instance
+            .showPopUpError("No valid yaml-based product file has been found");
+      }
+    } catch (error, stackTrace) {
+      Logger().e("ProductsSubScreen:DragAndDrop", error, stackTrace);
+      ErrorHandlingUtilities.instance.showPopUpError(error.toString());
+    }
+    return false;
+  }
+
+  Future<void> _addProduct(XFile file) async {
     Map<String, ApiAdaptor> apis = {};
     List<OpenAPIInfo> openAPIInfos = [];
     try {

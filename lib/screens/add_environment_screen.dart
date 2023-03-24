@@ -73,12 +73,12 @@ class _AddEnvironmentScreenState extends State<AddEnvironmentScreen> {
       if (accessToken.isNotEmpty) {
         final logger = Logger();
         Environment environment = Environment(
-          clientID: _clientIDController.text,
-          clientSecret: _clientSecretController.text,
+          clientID: _clientIDController.text.trim(),
+          clientSecret: _clientSecretController.text.trim(),
           environmentID: const Uuid().v1(),
-          environmentName: _environmentNameController.text,
-          serverURL: _serverURLController.text,
-          username: _usernameController.text,
+          environmentName: _environmentNameController.text.trim(),
+          serverURL: _serverURLController.text.trim(),
+          username: _usernameController.text.trim(),
           password: _passwordController.text,
           accessToken: accessToken,
           creationTime: DateTime.now(),
