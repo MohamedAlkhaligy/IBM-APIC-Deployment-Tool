@@ -27,6 +27,7 @@ class ProductService {
     String catalogName,
     ProductInfo productInfo, {
     String queryParameters = "",
+    ignoreError = false,
   }) async {
     final logger = Logger();
     try {
@@ -110,9 +111,10 @@ class ProductService {
         }
       } catch (error, stackTrace) {
         logger.e("HTTPAccessUtilites:post", error, stackTrace);
-        ErrorHandlingUtilities.instance.showPopUpError(
-          "${productInfo.adaptor.info.name}:${productInfo.adaptor.info.version}\n$error",
-        );
+        if (!ignoreError) {
+          ErrorHandlingUtilities.instance.showPopUpError(
+              "${productInfo.adaptor.info.name}:${productInfo.adaptor.info.version}\n$error");
+        }
         productJsonFile.delete();
       }
     } catch (error, stackTrace) {

@@ -4,8 +4,14 @@ import 'package:flutter/material.dart';
 class ErrorPopUp extends StatelessWidget {
   final String _message;
   final List<String>? errors;
+  final bool isDilemma;
 
-  const ErrorPopUp(this._message, {this.errors, super.key});
+  const ErrorPopUp(
+    this._message, {
+    this.errors,
+    this.isDilemma = false,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -49,14 +55,29 @@ class ErrorPopUp extends StatelessWidget {
                                 ),
                               ),
                       ),
-                      actions: [
-                        TextButton(
-                          child: const Text('Okay'),
-                          onPressed: () {
-                            Navigator.of(context).pop(true);
-                          },
-                        ),
-                      ],
+                      actions: isDilemma
+                          ? [
+                              TextButton(
+                                child: const Text('Yes'),
+                                onPressed: () {
+                                  Navigator.of(context).pop(true);
+                                },
+                              ),
+                              TextButton(
+                                child: const Text('No'),
+                                onPressed: () {
+                                  Navigator.of(context).pop(true);
+                                },
+                              ),
+                            ]
+                          : [
+                              TextButton(
+                                child: const Text('Okay'),
+                                onPressed: () {
+                                  Navigator.of(context).pop(true);
+                                },
+                              ),
+                            ],
                     ),
                   ),
                 ),

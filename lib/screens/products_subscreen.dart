@@ -1,5 +1,6 @@
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:ibm_apic_dt/utilities/error_handling_utilities.dart';
 
 import '../controllers/products_controller.dart';
 import '../models/environment.dart';
@@ -155,32 +156,50 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
                         ),
                       ],
                     ),
-                    Row(
-                      children: [
-                        Button(
-                          style: ButtonStyle(
-                            padding: ButtonState.all(const EdgeInsets.symmetric(
-                                vertical: 10, horizontal: 25)),
+                    if (_productController.productsInfos.isNotEmpty)
+                      Row(
+                        children: [
+                          Button(
+                            style: ButtonStyle(
+                              padding: ButtonState.all(
+                                  const EdgeInsets.symmetric(
+                                      vertical: 10, horizontal: 25)),
+                            ),
+                            child: const Text('Publish'),
+                            onPressed: () async {
+                              final isConfirmed = await showDialog<bool>(
+                                    barrierDismissible: true,
+                                    context: context,
+                                    builder: (ctx) {
+                                      return const ConfirmationPopUp(
+                                          "Do you want to publish the selected products?");
+                                    },
+                                  ) ??
+                                  false;
+                              if (isConfirmed) {
+                                setState(() => _isPublishing = true);
+                                await _productController.publishSelected();
+                                setState(() => _isPublishing = false);
+                              }
+                            },
                           ),
-                          child: const Text('Publish'),
-                          onPressed: () async {},
-                        ),
-                        const SizedBox(width: 10),
-                        Button(
-                          style: ButtonStyle(
-                            padding: ButtonState.all(const EdgeInsets.symmetric(
-                                vertical: 10, horizontal: 25)),
+                          const SizedBox(width: 10),
+                          Button(
+                            style: ButtonStyle(
+                              padding: ButtonState.all(
+                                  const EdgeInsets.symmetric(
+                                      vertical: 10, horizontal: 25)),
+                            ),
+                            child: const Text('Subscribe'),
+                            onPressed: () async {},
                           ),
-                          child: const Text('Subscribe'),
-                          onPressed: () async {},
-                        ),
-                        const SizedBox(width: 10),
-                        IconButton(
-                          icon: const Icon(FluentIcons.refresh),
-                          onPressed: () => _refreshData(),
-                        )
-                      ],
-                    )
+                          const SizedBox(width: 10),
+                          IconButton(
+                            icon: const Icon(FluentIcons.refresh),
+                            onPressed: () => _refreshData(),
+                          )
+                        ],
+                      )
                   ],
                 ),
                 const SizedBox(height: 15),

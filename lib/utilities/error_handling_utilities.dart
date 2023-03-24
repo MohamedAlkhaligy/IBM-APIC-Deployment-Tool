@@ -27,4 +27,21 @@ class ErrorHandlingUtilities {
     }
     return Future.value(true);
   }
+
+  Future<bool?> showPopUpErrorWithDilemma(String message,
+      {List<String>? errors, BuildContext? ctx}) {
+    BuildContext? context =
+        (ctx != null) ? ctx : NavigationService.navigatorKey.currentContext;
+    if (context != null) {
+      return showDialog<bool>(
+        context: context,
+        builder: (ctx) => ErrorPopUp(
+          message,
+          errors: errors,
+          isDilemma: true,
+        ),
+      );
+    }
+    return Future.value(true);
+  }
 }
