@@ -244,7 +244,7 @@ class GlobalPoliciesService {
 
       String hookTypeString = hookType == HookType.pre ? "prehook" : "posthook";
       String url =
-          '${environment.serverURL}/api/catalogs/$organizationName/$catalogName/configured-gateway-services/$configuredGatewayName//global-policy-$hookTypeString?$queryParameters';
+          '${environment.serverURL}/api/catalogs/$organizationName/$catalogName/configured-gateway-services/$configuredGatewayName/global-policy-$hookTypeString?$queryParameters';
 
       HTTPHeaders headers = HTTPHeaders(
         accept: 'application/json',
