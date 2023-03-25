@@ -21,8 +21,11 @@ class CatalogsService {
   }
 
   Future<List<Catalog>> listCatalogs(
-      Environment environment, String organizationName,
-      {String queryParameters = ""}) async {
+    Environment environment,
+    String organizationName, {
+    String queryParameters = "",
+    bool ignoreUIError = false,
+  }) async {
     List<Catalog> catalogs = [];
     final logger = Logger();
     try {
@@ -37,8 +40,12 @@ class CatalogsService {
         authorization: accessToken,
       );
 
-      var httpResponse =
-          await HTTPUtilites.getInstance().get(url, headers.typedJson);
+      var httpResponse = await HTTPUtilites.getInstance().get(
+        url,
+        headers.typedJson,
+        ignoreUIError: ignoreUIError,
+        ignoreReauthError: true,
+      );
 
       if (httpResponse != null && httpResponse.statusCode == 401) {
         final accessToken = await AuthService.getInstance().login(
@@ -50,8 +57,11 @@ class CatalogsService {
         );
         environment.accessToken = accessToken;
         headers.authorization = accessToken;
-        httpResponse =
-            await HTTPUtilites.getInstance().get(url, headers.typedJson);
+        httpResponse = await HTTPUtilites.getInstance().get(
+          url,
+          headers.typedJson,
+          ignoreUIError: ignoreUIError,
+        );
       }
 
       if (httpResponse != null && httpResponse.statusCode == 200) {

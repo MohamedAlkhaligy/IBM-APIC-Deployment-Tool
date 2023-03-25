@@ -30,6 +30,7 @@ class GlobalPoliciesService {
     String catalogName,
     String configuredGatewayName, {
     String queryParameters = "",
+    bool ignoreUIError = false,
   }) async {
     List<GlobalPolicyMeta> globalPolicies = [];
     final logger = Logger();
@@ -44,8 +45,12 @@ class GlobalPoliciesService {
         authorization: environment.accessToken,
       );
 
-      var httpResponse =
-          await HTTPUtilites.getInstance().get(url, headers.typedJson);
+      var httpResponse = await HTTPUtilites.getInstance().get(
+        url,
+        headers.typedJson,
+        ignoreUIError: ignoreUIError,
+        ignoreReauthError: true,
+      );
 
       if (httpResponse != null && httpResponse.statusCode == 401) {
         final accessToken = await AuthService.getInstance().login(
@@ -57,8 +62,11 @@ class GlobalPoliciesService {
         );
         environment.accessToken = accessToken;
         headers.authorization = accessToken;
-        httpResponse =
-            await HTTPUtilites.getInstance().get(url, headers.typedJson);
+        httpResponse = await HTTPUtilites.getInstance().get(
+          url,
+          headers.typedJson,
+          ignoreUIError: ignoreUIError,
+        );
       }
 
       if (httpResponse != null && httpResponse.statusCode == 200) {
@@ -105,6 +113,8 @@ class GlobalPoliciesService {
         url,
         yamlWriter.write(requestBody),
         headers.typedJson,
+        ignoreUIError: ignoreUIError,
+        ignoreReauthError: true,
       );
 
       if (httpResponse != null && httpResponse.statusCode == 401) {
@@ -121,6 +131,7 @@ class GlobalPoliciesService {
           url,
           yamlWriter.write(requestBody),
           headers.typedJson,
+          ignoreUIError: ignoreUIError,
         );
       }
 
@@ -155,8 +166,12 @@ class GlobalPoliciesService {
         authorization: environment.accessToken,
       );
 
-      var httpResponse =
-          await HTTPUtilites.getInstance().get(url, headers.typedJson);
+      var httpResponse = await HTTPUtilites.getInstance().get(
+        url,
+        headers.typedJson,
+        ignoreUIError: ignoreUIError,
+        ignoreReauthError: true,
+      );
 
       if (httpResponse != null && httpResponse.statusCode == 401) {
         final accessToken = await AuthService.getInstance().login(
@@ -168,8 +183,11 @@ class GlobalPoliciesService {
         );
         environment.accessToken = accessToken;
         headers.authorization = accessToken;
-        httpResponse =
-            await HTTPUtilites.getInstance().get(url, headers.typedJson);
+        httpResponse = await HTTPUtilites.getInstance().get(
+          url,
+          headers.typedJson,
+          ignoreUIError: ignoreUIError,
+        );
       }
 
       if (httpResponse != null && httpResponse.statusCode == 200) {
@@ -256,6 +274,8 @@ class GlobalPoliciesService {
         url,
         json.encode(requestBody),
         headers.typedJson,
+        ignoreUIError: ignoreUIError,
+        ignoreReauthError: true,
       );
 
       if (httpResponse != null && httpResponse.statusCode == 401) {
@@ -272,6 +292,7 @@ class GlobalPoliciesService {
           url,
           json.encode(requestBody),
           headers.typedJson,
+          ignoreUIError: ignoreUIError,
         );
       }
 
@@ -346,8 +367,12 @@ class GlobalPoliciesService {
         authorization: environment.accessToken,
       );
 
-      var httpResponse = await HTTPUtilites.getInstance()
-          .get(url, headers.typedJson, ignoreUIError: ignoreUIError);
+      var httpResponse = await HTTPUtilites.getInstance().get(
+        url,
+        headers.typedJson,
+        ignoreUIError: ignoreUIError,
+        ignoreReauthError: true,
+      );
 
       if (httpResponse != null && httpResponse.statusCode == 401) {
         final accessToken = await AuthService.getInstance().login(
@@ -359,8 +384,11 @@ class GlobalPoliciesService {
         );
         environment.accessToken = accessToken;
         headers.authorization = accessToken;
-        httpResponse = await HTTPUtilites.getInstance()
-            .get(url, headers.typedJson, ignoreUIError: ignoreUIError);
+        httpResponse = await HTTPUtilites.getInstance().get(
+          url,
+          headers.typedJson,
+          ignoreUIError: ignoreUIError,
+        );
       }
 
       if (httpResponse != null && httpResponse.statusCode == 200) {
@@ -397,8 +425,12 @@ class GlobalPoliciesService {
         authorization: environment.accessToken,
       );
 
-      var httpResponse = await HTTPUtilites.getInstance()
-          .delete(url, headers.typedJson, ignoreUIError: ignoreUIError);
+      var httpResponse = await HTTPUtilites.getInstance().delete(
+        url,
+        headers.typedJson,
+        ignoreUIError: ignoreUIError,
+        ignoreReauthError: true,
+      );
 
       if (httpResponse != null && httpResponse.statusCode == 401) {
         final accessToken = await AuthService.getInstance().login(
@@ -410,8 +442,11 @@ class GlobalPoliciesService {
         );
         environment.accessToken = accessToken;
         headers.authorization = accessToken;
-        httpResponse = await HTTPUtilites.getInstance()
-            .delete(url, headers.typedJson, ignoreUIError: ignoreUIError);
+        httpResponse = await HTTPUtilites.getInstance().delete(
+          url,
+          headers.typedJson,
+          ignoreUIError: ignoreUIError,
+        );
       }
 
       if (httpResponse != null && httpResponse.statusCode == 200) {
@@ -484,8 +519,12 @@ class GlobalPoliciesService {
         authorization: environment.accessToken,
       );
 
-      var httpResponse = await HTTPUtilites.getInstance()
-          .delete(url, headers.typedJson, ignoreUIError: ignoreUIError);
+      var httpResponse = await HTTPUtilites.getInstance().delete(
+        url,
+        headers.typedJson,
+        ignoreUIError: ignoreUIError,
+        ignoreReauthError: true,
+      );
 
       if (httpResponse != null && httpResponse.statusCode == 401) {
         final accessToken = await AuthService.getInstance().login(
@@ -497,8 +536,11 @@ class GlobalPoliciesService {
         );
         environment.accessToken = accessToken;
         headers.authorization = accessToken;
-        httpResponse = await HTTPUtilites.getInstance()
-            .delete(url, headers.typedJson, ignoreUIError: ignoreUIError);
+        httpResponse = await HTTPUtilites.getInstance().delete(
+          url,
+          headers.typedJson,
+          ignoreUIError: ignoreUIError,
+        );
       }
 
       if (httpResponse != null && httpResponse.statusCode == 200) {

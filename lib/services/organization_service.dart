@@ -19,7 +19,7 @@ class OrganizationsService {
   }
 
   Future<List<Organization>> listOrgs(Environment environment,
-      {String queryParameters = ""}) async {
+      {String queryParameters = "", bool ignoreUIError = false}) async {
     List<Organization> orgs = [];
     final logger = Logger();
     try {
@@ -32,8 +32,12 @@ class OrganizationsService {
         authorization: environment.accessToken,
       );
 
-      var httpResponse = await HTTPUtilites.getInstance()
-          .get(url, headers.typedJson, ignoreUIError: true);
+      var httpResponse = await HTTPUtilites.getInstance().get(
+        url,
+        headers.typedJson,
+        ignoreUIError: ignoreUIError,
+        ignoreReauthError: true,
+      );
 
       if (httpResponse != null && httpResponse.statusCode == 401) {
         final accessToken = await AuthService.getInstance().login(
@@ -45,8 +49,11 @@ class OrganizationsService {
         );
         environment.accessToken = accessToken;
         headers.authorization = accessToken;
-        httpResponse =
-            await HTTPUtilites.getInstance().get(url, headers.typedJson);
+        httpResponse = await HTTPUtilites.getInstance().get(
+          url,
+          headers.typedJson,
+          ignoreUIError: ignoreUIError,
+        );
       }
 
       if (httpResponse != null && httpResponse.statusCode == 200) {

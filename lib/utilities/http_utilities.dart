@@ -18,18 +18,24 @@ class HTTPUtilites {
     return _httpUtilites;
   }
 
-  handleError(Response httpResponse) async {
+  handleError(Response httpResponse, {bool ignoreReauthError = false}) async {
     final jsonResponseBody = json.decode(httpResponse.body);
     final error = HTTPErrorResponse.fromJson(jsonResponseBody);
-    await ErrorHandlingUtilities.instance.showPopUpError(
-      error.message.first,
-      errors: error.errors,
-    );
+    if (!ignoreReauthError && httpResponse.statusCode == 401) {
+      await ErrorHandlingUtilities.instance.showPopUpError(
+        error.message.first,
+        errors: error.errors,
+      );
+    }
   }
 
   Future<Response?> post(
-      String url, String body, Map<String, String> foldedHeaders,
-      {bool ignoreUIError = false, ignoreReauth = false}) async {
+    String url,
+    String body,
+    Map<String, String> foldedHeaders, {
+    bool ignoreUIError = false,
+    bool ignoreReauthError = false,
+  }) async {
     Response? response;
     var logger = Logger();
 
@@ -49,7 +55,12 @@ class HTTPUtilites {
       );
 
       if (httpResponse.statusCode != 200 && httpResponse.statusCode != 201) {
-        if (!ignoreUIError) await handleError(httpResponse);
+        if (!ignoreUIError) {
+          await handleError(
+            httpResponse,
+            ignoreReauthError: ignoreReauthError,
+          );
+        }
       }
       response = httpResponse;
       logger.i({
@@ -67,8 +78,12 @@ class HTTPUtilites {
     return response;
   }
 
-  Future<Response?> get(String url, Map<String, String> foldedHeaders,
-      {bool ignoreUIError = false}) async {
+  Future<Response?> get(
+    String url,
+    Map<String, String> foldedHeaders, {
+    bool ignoreUIError = false,
+    bool ignoreReauthError = false,
+  }) async {
     Response? response;
 
     var logger = Logger();
@@ -85,7 +100,12 @@ class HTTPUtilites {
         headers: foldedHeaders,
       );
       if (httpResponse.statusCode != 200) {
-        if (!ignoreUIError) await handleError(httpResponse);
+        if (!ignoreUIError) {
+          await handleError(
+            httpResponse,
+            ignoreReauthError: ignoreReauthError,
+          );
+        }
       }
 
       response = httpResponse;
@@ -104,8 +124,12 @@ class HTTPUtilites {
     return response;
   }
 
-  Future<Response?> delete(String url, Map<String, String> foldedHeaders,
-      {bool ignoreUIError = false}) async {
+  Future<Response?> delete(
+    String url,
+    Map<String, String> foldedHeaders, {
+    bool ignoreUIError = false,
+    bool ignoreReauthError = false,
+  }) async {
     Response? response;
 
     var logger = Logger();
@@ -125,7 +149,12 @@ class HTTPUtilites {
       if (httpResponse.statusCode != 200 &&
           httpResponse.statusCode != 202 &&
           httpResponse.statusCode != 204) {
-        if (!ignoreUIError) await handleError(httpResponse);
+        if (!ignoreUIError) {
+          await handleError(
+            httpResponse,
+            ignoreReauthError: ignoreReauthError,
+          );
+        }
       }
 
       response = httpResponse;

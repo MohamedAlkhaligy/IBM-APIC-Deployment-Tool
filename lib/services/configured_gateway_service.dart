@@ -20,8 +20,12 @@ class ConfiguredGatewayService {
   }
 
   Future<List<ConfiguredGateway>> listConfiguredGateways(
-      Environment environment, String organizationName, String catalogName,
-      {String queryParameters = ""}) async {
+    Environment environment,
+    String organizationName,
+    String catalogName, {
+    String queryParameters = "",
+    bool ignoreUIError = false,
+  }) async {
     List<ConfiguredGateway> orgs = [];
     final logger = Logger();
     try {
@@ -37,8 +41,12 @@ class ConfiguredGatewayService {
         xProxyTargetURL: environment.serverURL,
       );
 
-      var httpResponse =
-          await HTTPUtilites.getInstance().get(url, headers.typedJson);
+      var httpResponse = await HTTPUtilites.getInstance().get(
+        url,
+        headers.typedJson,
+        ignoreUIError: ignoreUIError,
+        ignoreReauthError: true,
+      );
 
       if (httpResponse != null && httpResponse.statusCode == 401) {
         final accessToken = await AuthService.getInstance().login(
@@ -50,8 +58,11 @@ class ConfiguredGatewayService {
         );
         environment.accessToken = accessToken;
         headers.authorization = accessToken;
-        httpResponse =
-            await HTTPUtilites.getInstance().get(url, headers.typedJson);
+        httpResponse = await HTTPUtilites.getInstance().get(
+          url,
+          headers.typedJson,
+          ignoreUIError: ignoreUIError,
+        );
       }
 
       if (httpResponse != null && httpResponse.statusCode == 200) {
