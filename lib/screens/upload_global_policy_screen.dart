@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:cross_file/cross_file.dart';
@@ -45,7 +46,6 @@ class _UploadGlobalPolicyScreenState extends State<UploadGlobalPolicyScreen>
   bool _isHighlighted = false;
   final String _message = 'Drop Global Policy Here!';
   final List<XFile> _list = [];
-  final mimeTypes = ["yaml, yml"];
 
   Widget uploadSingleFileWindow() {
     final screenHeight = MediaQuery.of(context).size.height;
@@ -63,48 +63,38 @@ class _UploadGlobalPolicyScreenState extends State<UploadGlobalPolicyScreen>
               children: [
                 DropTarget(
                   onDragDone: (detail) async {
-                    if (await FileSystemEntity.isDirectory(
-                        detail.files.first.path)) {
-                      ErrorHandlingUtilities.instance.showPopUpError(
-                          "Please, upload single file at a time!");
-                    } else if (!RegExp("^.*.(yaml|yml)\$")
-                        .hasMatch(detail.files.first.name.toLowerCase())) {
-                      ErrorHandlingUtilities.instance
-                          .showPopUpError("Only yaml files are supported!");
-                    } else {
-                      final isConfirmed = await showDialog<bool>(
-                            barrierDismissible: true,
-                            context: context,
-                            builder: (ctx) {
-                              return const ConfirmationPopUp(
-                                  "Do you want to upload this global policy?");
-                            },
-                          ) ??
-                          false;
-                      if (isConfirmed) {
-                        if (await FileSystemEntity.isDirectory(
-                            detail.files.first.path)) {
-                          ErrorHandlingUtilities.instance.showPopUpError(
-                              "Please, upload single file at a time!");
-                        } else if (!RegExp("^.*.(yaml|yml)\$")
-                            .hasMatch(detail.files.first.name.toLowerCase())) {
-                          ErrorHandlingUtilities.instance
-                              .showPopUpError("Only yaml files are supported!");
-                        } else {
-                          String globalPolicyYAML =
-                              await File(detail.files.first.path)
-                                  .readAsString();
-                          bool isUploaded =
-                              await GlobalPoliciesService.getInstance()
-                                  .uploadGlobalPolicy(globalPolicyYAML,
-                                      environment: widget.environment,
-                                      organizationName: widget.organizationName,
-                                      catalogName: widget.catalogName,
-                                      configuredGatewayName:
-                                          widget.configuredGatewayName);
-                          if (context.mounted) {
-                            Navigator.of(context).pop(isUploaded);
-                          }
+                    final isConfirmed = await showDialog<bool>(
+                          barrierDismissible: true,
+                          context: context,
+                          builder: (ctx) {
+                            return const ConfirmationPopUp(
+                                "Do you want to upload this global policy?");
+                          },
+                        ) ??
+                        false;
+                    if (isConfirmed) {
+                      if (await FileSystemEntity.isDirectory(
+                          detail.files.first.path)) {
+                        ErrorHandlingUtilities.instance.showPopUpError(
+                            "Please, upload single file at a time!");
+                      } else if (!RegExp("^.*.(yaml|yml)\$")
+                          .hasMatch(detail.files.first.name.toLowerCase())) {
+                        ErrorHandlingUtilities.instance
+                            .showPopUpError("Only yaml files are supported!");
+                      } else {
+                        String globalPolicyYAML =
+                            await File(detail.files.first.path).readAsString();
+                        bool isUploaded =
+                            await GlobalPoliciesService.getInstance()
+                                .uploadGlobalPolicy(
+                          globalPolicyYAML,
+                          environment: widget.environment,
+                          organizationName: widget.organizationName,
+                          catalogName: widget.catalogName,
+                          configuredGatewayName: widget.configuredGatewayName,
+                        );
+                        if (context.mounted) {
+                          Navigator.of(context).pop(isUploaded);
                         }
                       }
                     }
@@ -138,7 +128,27 @@ class _UploadGlobalPolicyScreenState extends State<UploadGlobalPolicyScreen>
                   const EdgeInsets.symmetric(vertical: 10, horizontal: 25)),
             ),
             child: const Text('Pick file'),
-            onPressed: () async {},
+            onPressed: () async {
+              final result = await FilePicker.platform.pickFiles(
+                type: FileType.custom,
+                allowedExtensions: ["yaml", "yml"],
+              );
+              if (result != null) {
+                String globalPolicyYAML =
+                    await File(result.files.single.path!).readAsString();
+                bool isUploaded = await GlobalPoliciesService.getInstance()
+                    .uploadGlobalPolicy(
+                  globalPolicyYAML,
+                  environment: widget.environment,
+                  organizationName: widget.organizationName,
+                  catalogName: widget.catalogName,
+                  configuredGatewayName: widget.configuredGatewayName,
+                );
+                if (context.mounted) {
+                  Navigator.of(context).pop(isUploaded);
+                }
+              }
+            },
           ),
         ],
       ),

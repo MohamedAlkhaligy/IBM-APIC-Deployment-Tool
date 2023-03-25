@@ -1,9 +1,14 @@
 // import 'dart:convert';
 // import 'dart:html';
 
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:path/path.dart';
 
 import '../global_configurations.dart';
+import '../navigation_service.dart';
 import '../widgets/confirmation_pop_up.dart';
 import './upload_global_policy_screen.dart';
 import '../models/catalogs/catalog.dart';
@@ -368,10 +373,32 @@ class _GlobalPoliciesSubScreenState extends State<GlobalPoliciesSubScreen> {
     setState(() => _isLoading = false);
   }
 
-  void download(
-    List<int> bytes,
-    String? downloadName,
-  ) {}
+  Future<void> download(String name, String version, String code) async {
+    final outputFilePath = await FilePicker.platform.saveFile(
+      fileName: '${name}_$version.yaml',
+      dialogTitle: 'Please select an output file:',
+    );
+    if (outputFilePath != null) {
+      bool isConfirmed = true;
+      final file = File(outputFilePath);
+      BuildContext? context = NavigationService.navigatorKey.currentContext;
+      if (file.existsSync() && context != null && context.mounted) {
+        isConfirmed = await showDialog<bool>(
+              barrierDismissible: true,
+              context: context,
+              builder: (ctx) {
+                return ConfirmationPopUp(
+                    "Do you want to overwrite ${basename(outputFilePath)}");
+              },
+            ) ??
+            false;
+      }
+
+      if (isConfirmed) {
+        file.writeAsString(code);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -556,40 +583,28 @@ class _GlobalPoliciesSubScreenState extends State<GlobalPoliciesSubScreen> {
                                 child: IconButton(
                                   icon: const Icon(FluentIcons.download),
                                   onPressed: () async {
-                                    final isConfirmed = await showDialog<bool>(
-                                          barrierDismissible: true,
-                                          context: context,
-                                          builder: (ctx) {
-                                            return const ConfirmationPopUp(
-                                                "Do you want to download this global policy?");
-                                          },
-                                        ) ??
-                                        false;
-                                    if (isConfirmed) {
-                                      final name = globalPolicies[index]
-                                          .globalPolicyMeta
-                                          .name;
-                                      final version = globalPolicies[index]
-                                          .globalPolicyMeta
-                                          .version!;
-                                      final code = await GlobalPoliciesService
-                                              .getInstance()
-                                          .getGlobalPolicyYAML(
-                                        environment: widget.environment,
-                                        organizationName:
-                                            orgs[_organizationIndex].name!,
-                                        catalogName:
-                                            catalogs[_catalogIndex].name,
-                                        configuredGatewayName:
-                                            configuredGateways[
-                                                    _configuredGatewayIndex]
-                                                .name,
-                                        globalPolicyName: name,
-                                        globalPolicyVersion: version,
-                                      );
-                                      download(code.codeUnits,
-                                          '${name}_$version.yaml');
-                                    }
+                                    final name = globalPolicies[index]
+                                        .globalPolicyMeta
+                                        .name;
+                                    final version = globalPolicies[index]
+                                        .globalPolicyMeta
+                                        .version!;
+                                    final code = await GlobalPoliciesService
+                                            .getInstance()
+                                        .getGlobalPolicyYAML(
+                                      environment: widget.environment,
+                                      organizationName:
+                                          orgs[_organizationIndex].name!,
+                                      catalogName: catalogs[_catalogIndex].name,
+                                      configuredGatewayName: configuredGateways[
+                                              _configuredGatewayIndex]
+                                          .name,
+                                      globalPolicyName: name,
+                                      globalPolicyVersion: version,
+                                    );
+                                    print(name);
+                                    print(version);
+                                    await download(name, version, code);
                                   },
                                 ),
                               ),

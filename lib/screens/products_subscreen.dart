@@ -25,7 +25,7 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
       _areFilesLoaded = false,
       _isHighlighted = false,
       _isPublishing = false;
-  Color color = Colors.black;
+  Color color = Colors.white;
 
   final _searchController = TextEditingController();
   late final ProductController _productController;
@@ -220,7 +220,7 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
                         child: Center(
                           child: MouseRegion(
                             onHover: (event) =>
-                                setState(() => color = Colors.black),
+                                setState(() => color = Colors.grey),
                             onExit: (event) =>
                                 setState(() => color = Colors.white),
                             cursor: SystemMouseCursors.click,
@@ -228,7 +228,7 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
                               onTap: () async {
                                 setState(() => _isLoading = true);
                                 _areFilesLoaded = await showDialog<bool>(
-                                      barrierDismissible: true,
+                                      barrierDismissible: false,
                                       context: context,
                                       builder: (ctx) {
                                         return UploadProductsScreen(

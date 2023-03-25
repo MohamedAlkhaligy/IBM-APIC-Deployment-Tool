@@ -17,7 +17,7 @@ import './utilities/routing_utilities.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Hive.initFlutter();
+  await Hive.initFlutter("${Directory.current.path}\\hive\\");
   Hive.registerAdapter(EnvironmentsAdapter());
   Hive.registerAdapter(EnvironmentAdapter());
   final environmenstBox = await Hive.openBox<Environments>('environmentBox');
@@ -32,7 +32,7 @@ void main() async {
   // Logger.level = Level.nothing;
 }
 
-// This function is used if the platform is Windows and while in development mode
+// This is used if the platform is Windows and while in development mode
 // Allows self-signed certificates
 class MyHttpOverrides extends HttpOverrides {
   @override

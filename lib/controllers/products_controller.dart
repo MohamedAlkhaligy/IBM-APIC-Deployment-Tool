@@ -155,7 +155,11 @@ class ProductController {
             .showPopUpError("No valid yaml-based product file has been found");
       }
     } catch (error, stackTrace) {
-      Logger().e("ProductsSubScreen:DragAndDrop", error, stackTrace);
+      Logger().e(
+        "ProductsSubScreen:DragAndDrop",
+        error,
+        stackTrace,
+      );
       ErrorHandlingUtilities.instance.showPopUpError(error.toString());
     }
     return false;
@@ -213,8 +217,11 @@ class ProductController {
         ),
       );
     } catch (error, traceStack) {
-      Logger()
-          .e("ProductsSubScreen:addProduct:${file.name}", error, traceStack);
+      Logger().e(
+        "ProductsSubScreen:addProduct:${file.path}",
+        error,
+        traceStack,
+      );
     }
   }
 }

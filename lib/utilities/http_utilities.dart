@@ -21,7 +21,7 @@ class HTTPUtilites {
   handleError(Response httpResponse, {bool ignoreReauthError = false}) async {
     final jsonResponseBody = json.decode(httpResponse.body);
     final error = HTTPErrorResponse.fromJson(jsonResponseBody);
-    if (!ignoreReauthError && httpResponse.statusCode == 401) {
+    if (!(ignoreReauthError && httpResponse.statusCode == 401)) {
       await ErrorHandlingUtilities.instance.showPopUpError(
         error.message.first,
         errors: error.errors,

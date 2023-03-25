@@ -135,8 +135,12 @@ class GlobalPoliciesService {
         );
       }
 
-      if (httpResponse != null && httpResponse.statusCode == 201) {
-        return true;
+      if (httpResponse != null) {
+        if (httpResponse.statusCode == 201) {
+          return true;
+        } else {
+          ErrorHandlingUtilities.instance.showPopUpError(httpResponse.body);
+        }
       }
     } catch (error) {
       logger.e("GlobalPoliciesService:uploadGlobalPolicy", error);
