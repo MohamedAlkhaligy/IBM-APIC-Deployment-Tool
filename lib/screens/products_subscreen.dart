@@ -1,5 +1,7 @@
 import 'package:desktop_drop/desktop_drop.dart';
+import 'package:dotted_border/dotted_border.dart';
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:ibm_apic_dt/screens/upload_products_screen.dart';
 import 'package:ibm_apic_dt/utilities/error_handling_utilities.dart';
 
 import '../controllers/products_controller.dart';
@@ -23,7 +25,8 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
       _areFilesLoaded = false,
       _isHighlighted = false,
       _isPublishing = false;
-  final _message = 'Drop products here';
+  Color color = Colors.black;
+
   final _searchController = TextEditingController();
   late final ProductController _productController;
   SortType sortType = SortType.recent;
@@ -204,80 +207,58 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
                 ),
                 const SizedBox(height: 15),
                 !_areFilesLoaded
-                    ? Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              borderRadius:
-                                  const BorderRadius.all(Radius.circular(10)),
-                              color: _isHighlighted
-                                  ? Colors.grey[40]
-                                  : Colors.grey[100],
-                            ),
-                            width: screenWidth * 0.95,
-                            height: screenHeight * 0.65,
-                            child: Stack(
-                              children: [
-                                DropTarget(
-                                  key: UniqueKey(),
-                                  onDragDone: (detail) async {
-                                    setState(() => _isLoading = true);
-                                    _areFilesLoaded = await _productController
-                                        .loadProducts(detail.files);
-                                    setState(() => _isLoading = false);
-                                  },
-                                  onDragEntered: (details) =>
-                                      setState(() => _isHighlighted = true),
-                                  onDragExited: (details) =>
-                                      setState(() => _isHighlighted = false),
-                                  child: Container(),
-                                ),
-                                Center(
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      const Icon(FluentIcons.bulk_upload,
-                                          size: 80, color: Colors.white),
-                                      Text(
-                                        _message,
-                                        style: const TextStyle(
-                                            color: Colors.white),
-                                      ),
-                                    ],
+                    ? Container(
+                        decoration: BoxDecoration(
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(10)),
+                          color: _isHighlighted
+                              ? Colors.grey[40]
+                              : Colors.black.withOpacity(0.2),
+                        ),
+                        width: screenWidth,
+                        height: screenHeight * 0.7,
+                        child: Center(
+                          child: MouseRegion(
+                            onHover: (event) =>
+                                setState(() => color = Colors.black),
+                            onExit: (event) =>
+                                setState(() => color = Colors.white),
+                            cursor: SystemMouseCursors.click,
+                            child: GestureDetector(
+                              onTap: () async {
+                                setState(() => _isLoading = true);
+                                _areFilesLoaded = await showDialog<bool>(
+                                      barrierDismissible: true,
+                                      context: context,
+                                      builder: (ctx) {
+                                        return UploadProductsScreen(
+                                            _productController);
+                                      },
+                                    ) ??
+                                    false;
+                                setState(() => _isLoading = false);
+                              },
+                              child: SizedBox(
+                                width: screenWidth / 2,
+                                height: screenHeight * 0.7 / 2,
+                                child: DottedBorder(
+                                  color: color,
+                                  radius: const Radius.circular(15),
+                                  strokeWidth: 2,
+                                  dashPattern: const [10, 10],
+                                  borderType: BorderType.RRect,
+                                  child: Center(
+                                    child: Icon(
+                                      FluentIcons.add,
+                                      size: 45,
+                                      color: color,
+                                    ),
                                   ),
-                                )
-                              ],
+                                ),
+                              ),
                             ),
                           ),
-                          const SizedBox(height: 10),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Button(
-                                style: ButtonStyle(
-                                  padding: ButtonState.all(
-                                      const EdgeInsets.symmetric(
-                                          vertical: 10, horizontal: 25)),
-                                ),
-                                child: const Text('Pick Files'),
-                                onPressed: () async {},
-                              ),
-                              const SizedBox(width: 25),
-                              const Text("OR"),
-                              const SizedBox(width: 25),
-                              Button(
-                                style: ButtonStyle(
-                                  padding: ButtonState.all(
-                                      const EdgeInsets.symmetric(
-                                          vertical: 10, horizontal: 25)),
-                                ),
-                                child: const Text('Pick Folder'),
-                                onPressed: () async {},
-                              ),
-                            ],
-                          )
-                        ],
+                        ),
                       )
                     : Column(
                         children: [
