@@ -24,10 +24,12 @@ class _EnvironmentScreenState extends State<EnvironmentScreen> {
     super.initState();
     _tabs = [
       Tab(
+        key: UniqueKey(),
         text: const Text('Products'),
         body: ProductsScreen(widget.environment),
       ),
       Tab(
+        key: UniqueKey(),
         text: const Text('Global Policies'),
         body: GlobalPoliciesScreen(widget.environment),
       )

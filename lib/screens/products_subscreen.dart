@@ -220,6 +220,7 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
                             child: Stack(
                               children: [
                                 DropTarget(
+                                  key: UniqueKey(),
                                   onDragDone: (detail) async {
                                     setState(() => _isLoading = true);
                                     _areFilesLoaded = await _productController
