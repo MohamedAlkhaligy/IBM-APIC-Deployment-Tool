@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:cross_file/cross_file.dart';
+import 'package:ibm_apic_dt/errors/product_with_no_apis_exception.dart';
 import 'package:logger/logger.dart';
 import 'package:path/path.dart' as path;
 import 'package:yaml/yaml.dart';
@@ -26,7 +27,8 @@ class ProductController {
   int _organizationIndex, _catalogIndex, _productsSelected;
   List<Organization> orgs;
   List<Catalog> catalogs;
-  List<ProductInfo> productsInfos;
+  List<ProductInfo> _productsInfos;
+  String _searchBy = "";
   Environment _environment;
 
   ProductController(this._environment)
@@ -35,7 +37,19 @@ class ProductController {
         _productsSelected = 0,
         orgs = [],
         catalogs = [],
-        productsInfos = [];
+        _productsInfos = [];
+
+  List<ProductInfo> get productsInfos {
+    return _productsInfos
+        .where((productInfo) => productInfo.adaptor.info.name
+            .toLowerCase()
+            .contains(_searchBy.toLowerCase().trim()))
+        .toList();
+  }
+
+  void searchProduct(String name) {
+    _searchBy = name;
+  }
 
   int get productsSelected => _productsSelected;
 
@@ -49,9 +63,30 @@ class ProductController {
 
   set catalogIndex(int value) => _catalogIndex = value;
 
+  void sort(SortType sortType) {
+    switch (sortType) {
+      case SortType.ascending:
+        _productsInfos
+            .sort((a, b) => a.adaptor.info.name.compareTo(b.adaptor.info.name));
+        break;
+      case SortType.created:
+        break;
+      case SortType.descending:
+        _productsInfos
+            .sort((a, b) => b.adaptor.info.name.compareTo(a.adaptor.info.name));
+        break;
+      case SortType.recent:
+        break;
+    }
+  }
+
   void _clearData() {
     orgs = [];
     catalogs = [];
+  }
+
+  void unLoadProducts() {
+    _productsInfos.clear();
   }
 
   bool areDataAvailable() {
@@ -63,7 +98,7 @@ class ProductController {
         _environment,
         orgs[_organizationIndex].name!,
         catalogs[_catalogIndex].name,
-        productsInfos[index]);
+        _productsInfos[index]);
   }
 
   Future<void> publishSelected() async {
@@ -71,7 +106,7 @@ class ProductController {
       ErrorHandlingUtilities.instance
           .showPopUpError("Please select a product to publish!");
     } else {
-      for (final productInfos in productsInfos) {
+      for (final productInfos in _productsInfos) {
         if (productInfos.isSelected) {
           final hasPublished = await ProductService.getInstance().publish(
             _environment,
@@ -148,7 +183,7 @@ class ProductController {
           await _addProduct(file);
         }
       }
-      if (productsInfos.isNotEmpty) {
+      if (_productsInfos.isNotEmpty) {
         return true;
       } else {
         ErrorHandlingUtilities.instance
@@ -176,6 +211,9 @@ class ProductController {
       final product = Product.fromJson(productAsJson);
 
       // Check if the product APIs exist
+      // if (product.apis.entries.isEmpty) {
+      //   throw ProductWithNoAPIsException("Product contains no API");
+      // }
 
       product.apis.forEach((key, api) async {
         String openAPIPath =
@@ -201,16 +239,17 @@ class ProductController {
             ApiAdaptor(name: "${openAPI.info.name}:${openAPI.info.version}");
         openAPIInfos.add(
           OpenAPIInfo(
-              path: openAPIPath,
-              filename: openAPIFilename,
-              name: openAPI.info.name,
-              version: openAPI.info.version),
+            path: openAPIPath,
+            filename: openAPIFilename,
+            name: openAPI.info.name,
+            version: openAPI.info.version,
+          ),
         );
       });
 
       // Validation Done
       // Add product to list of products
-      productsInfos.add(
+      _productsInfos.add(
         ProductInfo(
           openAPIInfos: openAPIInfos,
           adaptor: ProductAdaptor.fromProduct(product, apis),

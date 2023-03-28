@@ -66,7 +66,7 @@ class ErrorPopUp extends StatelessWidget {
                               TextButton(
                                 child: const Text('No'),
                                 onPressed: () {
-                                  Navigator.of(context).pop(true);
+                                  Navigator.of(context).pop(false);
                                 },
                               ),
                             ]

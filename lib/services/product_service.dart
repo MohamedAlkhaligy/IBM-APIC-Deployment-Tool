@@ -1,16 +1,20 @@
 import 'dart:convert';
 import 'dart:io';
 
+import "package:path/path.dart" show dirname;
+import 'dart:io' show Platform;
+
 import 'package:dio/dio.dart';
-import 'package:logger/logger.dart';
 import 'package:http_parser/http_parser.dart';
+import 'package:logger/logger.dart';
 import 'package:uuid/uuid.dart';
 
-import '../models/products/product_info.dart';
-import '../utilities/error_handling_utilities.dart';
 import './auth_service.dart';
 import '../models/environment.dart';
+import '../models/http_error_response.dart';
 import '../models/http_headers.dart';
+import '../models/products/product_info.dart';
+import '../utilities/error_handling_utilities.dart';
 
 class ProductService {
   static final _productService = ProductService._internal();
@@ -44,10 +48,9 @@ class ProductService {
       );
 
       final String productFilename = "$id.json";
-      print(Directory.current);
-      final productJsonFile =
-          await File("${Directory.current.path}\\temp\\$productFilename")
-              .create();
+      final productJsonFile = await File(
+              "${dirname(Platform.script.toFilePath())}\\temp\\$productFilename")
+          .create();
       await productJsonFile
           .writeAsString(json.encode(productInfo.adaptor.toJson()));
 
@@ -109,17 +112,29 @@ class ProductService {
           productJsonFile.delete();
           return true;
         }
+      } on DioError catch (error, stackTrace) {
+        logger.e("HTTPAccessUtilites:post", error, stackTrace);
+        if (!ignoreError && error.response != null) {
+          HTTPErrorResponse errorResponse =
+              HTTPErrorResponse.fromJson(error.response!.data);
+          ErrorHandlingUtilities.instance.showPopUpError(
+            "${productInfo.adaptor.info.name}:${productInfo.adaptor.info.version}",
+            errors: errorResponse.message,
+          );
+        }
       } catch (error, stackTrace) {
         logger.e("HTTPAccessUtilites:post", error, stackTrace);
         if (!ignoreError) {
           ErrorHandlingUtilities.instance.showPopUpError(
               "${productInfo.adaptor.info.name}:${productInfo.adaptor.info.version}\n$error");
         }
+      } finally {
         productJsonFile.delete();
       }
     } catch (error, stackTrace) {
       logger.e("ProductService:publish", error, stackTrace);
     }
+
     return false;
   }
 }

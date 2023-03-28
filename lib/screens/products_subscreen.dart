@@ -21,22 +21,30 @@ class ProductsSubScreen extends StatefulWidget {
 }
 
 class _ProductsSubScreenState extends State<ProductsSubScreen> {
-  bool _isLoading = false,
-      _areFilesLoaded = false,
-      _isHighlighted = false,
-      _isPublishing = false;
-  Color color = Colors.white;
-
   final _searchController = TextEditingController();
-  late final ProductController _productController;
-  SortType sortType = SortType.recent;
 
+  bool _isLoading = false, _areFilesLoaded = false, _isPublishing = false;
+  Color color = Colors.white;
+  SortType sortType = SortType.ascending;
+
+  late final ProductController _productController;
   late final _selectAllButton = Checkbox(
       checked: true, onChanged: (value) => changeSelectionCallback(false));
   late final _clearAllButton = Checkbox(
       checked: false, onChanged: (value) => changeSelectionCallback(true));
   late final _selectedButton = Checkbox(
       checked: null, onChanged: (value) => changeSelectionCallback(false));
+
+  Widget _buildSGlobalSelectionButton() {
+    if (_productController.productsSelected ==
+            _productController.productsInfos.length &&
+        _productController.productsInfos.isNotEmpty) {
+      return _selectAllButton;
+    } else if (_productController.productsSelected == 0) {
+      return _clearAllButton;
+    }
+    return _selectedButton;
+  }
 
   void changeSelectionCallback(bool? state) {
     if (state == false) {
@@ -113,14 +121,74 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
     return catalogsMenu;
   }
 
-  Widget _buildSGlobalSelectionButton() {
-    if (_productController.productsSelected ==
-        _productController.productsInfos.length) {
-      return _selectAllButton;
-    } else if (_productController.productsSelected == 0) {
-      return _clearAllButton;
-    }
-    return _selectedButton;
+  Widget _buildButton({
+    required Widget icon,
+    required String confirmationText,
+    required Function onConfirmedFunction,
+    String? tooltipMessage,
+  }) {
+    return Tooltip(
+      message: tooltipMessage ?? '',
+      child: IconButton(
+        icon: icon,
+        onPressed: () async {
+          final isConfirmed = await showDialog<bool>(
+                barrierDismissible: true,
+                context: context,
+                builder: (ctx) {
+                  return ConfirmationPopUp(confirmationText);
+                },
+              ) ??
+              false;
+          if (isConfirmed) {
+            onConfirmedFunction();
+          }
+        },
+      ),
+    );
+  }
+
+  Widget _buildGlobalButtons() {
+    return Row(
+      children: [
+        _buildButton(
+          icon: const Icon(FluentIcons.remove_from_shopping_list),
+          tooltipMessage: "Unload products",
+          confirmationText: "Do you wish to unload all products?",
+          onConfirmedFunction: () {
+            setState(() => _isLoading = true);
+            _productController.unLoadProducts();
+            _areFilesLoaded = false;
+            changeSelectionCallback(false);
+            setState(() => _isLoading = false);
+          },
+        ),
+        const SizedBox(width: 10),
+        _buildButton(
+          icon: const Icon(FluentIcons.publish_content),
+          tooltipMessage: 'Publish selected products',
+          confirmationText: 'Do you want to publish the selected products?',
+          onConfirmedFunction: () async {
+            setState(() => _isPublishing = true);
+            await _productController.publishSelected();
+            setState(() => _isPublishing = false);
+          },
+        ),
+        const SizedBox(width: 10),
+        Tooltip(
+          message: "Subscribe selected products",
+          child: IconButton(
+            icon: Image.asset("assets/icons/subscription-64.png", width: 16),
+            onPressed: null,
+          ),
+        ),
+        const SizedBox(width: 10),
+        IconButton(
+          icon: const Icon(FluentIcons.refresh),
+          onPressed: () => _refreshData(),
+        )
+      ],
+    );
   }
 
   @override
@@ -160,49 +228,7 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
                       ],
                     ),
                     if (_productController.productsInfos.isNotEmpty)
-                      Row(
-                        children: [
-                          Button(
-                            style: ButtonStyle(
-                              padding: ButtonState.all(
-                                  const EdgeInsets.symmetric(
-                                      vertical: 10, horizontal: 25)),
-                            ),
-                            child: const Text('Publish'),
-                            onPressed: () async {
-                              final isConfirmed = await showDialog<bool>(
-                                    barrierDismissible: true,
-                                    context: context,
-                                    builder: (ctx) {
-                                      return const ConfirmationPopUp(
-                                          "Do you want to publish the selected products?");
-                                    },
-                                  ) ??
-                                  false;
-                              if (isConfirmed) {
-                                setState(() => _isPublishing = true);
-                                await _productController.publishSelected();
-                                setState(() => _isPublishing = false);
-                              }
-                            },
-                          ),
-                          const SizedBox(width: 10),
-                          Button(
-                            style: ButtonStyle(
-                              padding: ButtonState.all(
-                                  const EdgeInsets.symmetric(
-                                      vertical: 10, horizontal: 25)),
-                            ),
-                            child: const Text('Subscribe'),
-                            onPressed: () async {},
-                          ),
-                          const SizedBox(width: 10),
-                          IconButton(
-                            icon: const Icon(FluentIcons.refresh),
-                            onPressed: () => _refreshData(),
-                          )
-                        ],
-                      )
+                      _buildGlobalButtons()
                   ],
                 ),
                 const SizedBox(height: 15),
@@ -211,9 +237,7 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
                         decoration: BoxDecoration(
                           borderRadius:
                               const BorderRadius.all(Radius.circular(10)),
-                          color: _isHighlighted
-                              ? Colors.grey[40]
-                              : Colors.black.withOpacity(0.2),
+                          color: Colors.black.withOpacity(0.2),
                         ),
                         width: screenWidth,
                         height: screenHeight * 0.7,
@@ -232,7 +256,8 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
                                       context: context,
                                       builder: (ctx) {
                                         return UploadProductsScreen(
-                                            _productController);
+                                          _productController,
+                                        );
                                       },
                                     ) ??
                                     false;
@@ -269,6 +294,11 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
                               Expanded(
                                 child: TextBox(
                                   controller: _searchController,
+                                  onChanged: (value) {
+                                    _productController.searchProduct(value);
+                                    changeSelectionCallback(false);
+                                    setState(() {});
+                                  },
                                 ),
                               ),
                               const SizedBox(width: 10),
@@ -281,10 +311,6 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
                                   ComboBoxItem(
                                     value: SortType.descending,
                                     child: Text("Descending"),
-                                  ),
-                                  ComboBoxItem(
-                                    value: SortType.recent,
-                                    child: Text("Recent"),
                                   )
                                 ],
                                 icon: const Icon(FluentIcons.sort),
@@ -292,6 +318,7 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
                                 onChanged: ((value) {
                                   setState(() {
                                     sortType = value!;
+                                    _productController.sort(sortType);
                                   });
                                 }),
                                 value: sortType,
@@ -351,33 +378,26 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
                                               .version),
                                           trailing: Row(
                                             children: [
-                                              Button(
-                                                  child: const Text("Publish"),
-                                                  onPressed: () async {
-                                                    final isConfirmed =
-                                                        await showDialog<bool>(
-                                                              barrierDismissible:
-                                                                  true,
-                                                              context: context,
-                                                              builder: (ctx) {
-                                                                return ConfirmationPopUp(
-                                                                    "Do you want to publish ${_productController.productsInfos[index].adaptor.info.name}:${_productController.productsInfos[index].adaptor.info.version}");
-                                                              },
-                                                            ) ??
-                                                            false;
+                                              _buildButton(
+                                                  icon: const Icon(FluentIcons
+                                                      .publish_content),
+                                                  tooltipMessage:
+                                                      "Publish Product",
+                                                  confirmationText:
+                                                      "Do you want to publish ${_productController.productsInfos[index].adaptor.info.name}:${_productController.productsInfos[index].adaptor.info.version} to ${_productController.catalogs[_productController.catalogIndex].name}",
+                                                  onConfirmedFunction:
+                                                      () async {
                                                     setState(() =>
                                                         _isPublishing = true);
-                                                    if (isConfirmed) {
-                                                      await _productController
-                                                          .publish(index);
-                                                    }
+                                                    await _productController
+                                                        .publish(index);
                                                     setState(() =>
                                                         _isPublishing = false);
                                                   }),
                                               const SizedBox(width: 10),
                                               Button(
                                                 child: const Text("Subscribe"),
-                                                onPressed: () {},
+                                                onPressed: null,
                                               ),
                                             ],
                                           ),

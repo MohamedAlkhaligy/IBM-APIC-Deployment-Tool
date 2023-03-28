@@ -48,6 +48,7 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Logger.level = Level.nothing;
     if (Platform.isWindows) {
       HttpOverrides.global = MyHttpOverrides();
     }
@@ -66,20 +67,20 @@ class App extends StatelessWidget {
           glowFactor: is10footScreen() ? 2.0 : 0.0,
         ),
       ),
-      // initialRoute: HomeScreen.routeName,
-      home: EnvironmentScreen(
-        Environment(
-            serverURL: 'https://127.0.0.1:2000',
-            environmentName: 'Local',
-            clientID: "599b7aef-8841-4ee2-88a0-84d49c4d6ff2",
-            clientSecret: "0ea28423-e73b-47d4-b40e-ddb45c48bb0c",
-            username: 'shavon',
-            password: '7iron-hide',
-            accessToken: '',
-            creationTime: DateTime.now(),
-            environmentID: '1',
-            lastVisited: DateTime.now()),
-      ),
+      initialRoute: HomeScreen.routeName,
+      // home: EnvironmentScreen(
+      //   Environment(
+      //       serverURL: 'https://127.0.0.1:2000',
+      //       environmentName: 'Local',
+      //       clientID: "599b7aef-8841-4ee2-88a0-84d49c4d6ff2",
+      //       clientSecret: "0ea28423-e73b-47d4-b40e-ddb45c48bb0c",
+      //       username: 'shavon',
+      //       password: '7iron-hide',
+      //       accessToken: '',
+      //       creationTime: DateTime.now(),
+      //       environmentID: '1',
+      //       lastVisited: DateTime.now()),
+      // ),
 
       // routes: RoutingUtilities.routes,
       onGenerateRoute: RoutingUtilities.generateRoute,
