@@ -13,7 +13,7 @@ import '../models/http_headers.dart';
 import '../utilities/error_handling_utilities.dart';
 import '../utilities/http_utilities.dart';
 
-enum HookType { pre, post }
+enum HookType { pre, post, error }
 
 class GlobalPoliciesService {
   static final _globalPoliciesService = GlobalPoliciesService._internal();
@@ -22,6 +22,17 @@ class GlobalPoliciesService {
 
   factory GlobalPoliciesService.getInstance() {
     return _globalPoliciesService;
+  }
+
+  String mapHookType(HookType hookType) {
+    switch (hookType) {
+      case HookType.pre:
+        return "prehook";
+      case HookType.post:
+        return "posthook";
+      case HookType.error:
+        return "error";
+    }
   }
 
   Future<List<GlobalPolicyMeta>> listGlobalPolicies(
@@ -246,6 +257,27 @@ class GlobalPoliciesService {
     );
   }
 
+  Future<bool> assignErrorGlobalPolicy({
+    required Environment environment,
+    required String organizationName,
+    required String catalogName,
+    required String configuredGatewayName,
+    required String globalPolicyUrl,
+    String queryParameters = "",
+    bool ignoreUIError = false,
+  }) async {
+    return await _assignHookGlobalPolicy(
+      environment: environment,
+      organizationName: organizationName,
+      catalogName: catalogName,
+      configuredGatewayName: configuredGatewayName,
+      globalPolicyUrl: globalPolicyUrl,
+      queryParameters: queryParameters,
+      hookType: HookType.error,
+      ignoreUIError: ignoreUIError,
+    );
+  }
+
   Future<bool> _assignHookGlobalPolicy({
     required Environment environment,
     required String organizationName,
@@ -264,7 +296,7 @@ class GlobalPoliciesService {
         'global_policy_url': globalPolicyUrl,
       };
 
-      String hookTypeString = hookType == HookType.pre ? "prehook" : "posthook";
+      String hookTypeString = mapHookType(hookType);
       String url =
           '${environment.serverURL}/api/catalogs/$organizationName/$catalogName/configured-gateway-services/$configuredGatewayName/global-policy-$hookTypeString?$queryParameters';
 
@@ -348,6 +380,25 @@ class GlobalPoliciesService {
     );
   }
 
+  Future<GlobalPolicyMeta?> getErrorGlobalPolicy(
+    Environment environment,
+    String organizationName,
+    String catalogName,
+    String configuredGatewayName, {
+    String queryParameters = "",
+    bool ignoreUIError = false,
+  }) async {
+    return await _getHookGlobalPolicy(
+      environment,
+      organizationName,
+      catalogName,
+      configuredGatewayName,
+      queryParameters: queryParameters,
+      hookType: HookType.error,
+      ignoreUIError: ignoreUIError,
+    );
+  }
+
   Future<GlobalPolicyMeta?> _getHookGlobalPolicy(
     Environment environment,
     String organizationName,
@@ -362,7 +413,7 @@ class GlobalPoliciesService {
     try {
       // await AuthService.getInstance().introspectAndLogin(environment);
 
-      String hookTypeString = hookType == HookType.pre ? "prehook" : "posthook";
+      String hookTypeString = mapHookType(hookType);
       String url =
           '${environment.serverURL}/api/catalogs/$organizationName/$catalogName/configured-gateway-services/$configuredGatewayName/global-policy-$hookTypeString?$queryParameters';
 
@@ -501,6 +552,25 @@ class GlobalPoliciesService {
     );
   }
 
+  Future<bool> deleteErrorGlobalPolicy({
+    required Environment environment,
+    required String organizationName,
+    required String catalogName,
+    required String configuredGatewayName,
+    String queryParameters = "",
+    bool ignoreUIError = false,
+  }) async {
+    return _deleteHookGlobalPolicy(
+      environment: environment,
+      organizationName: organizationName,
+      catalogName: catalogName,
+      configuredGatewayName: configuredGatewayName,
+      hookType: HookType.error,
+      queryParameters: queryParameters,
+      ignoreUIError: ignoreUIError,
+    );
+  }
+
   Future<bool> _deleteHookGlobalPolicy({
     required Environment environment,
     required String organizationName,
@@ -514,7 +584,7 @@ class GlobalPoliciesService {
     try {
       // await AuthService.getInstance().introspectAndLogin(environment);
 
-      String hookTypeString = hookType == HookType.pre ? "prehook" : "posthook";
+      String hookTypeString = mapHookType(hookType);
       String url =
           '${environment.serverURL}/api/catalogs/$organizationName/$catalogName/configured-gateway-services/$configuredGatewayName/global-policy-$hookTypeString?$queryParameters';
 

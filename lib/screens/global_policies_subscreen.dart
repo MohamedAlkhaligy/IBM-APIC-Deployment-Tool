@@ -5,6 +5,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:ibm_apic_dt/widgets/choices_pop_up.dart';
 import 'package:path/path.dart';
 
 import '../global_configurations.dart';
@@ -36,7 +37,7 @@ class GlobalPoliciesSubScreen extends StatefulWidget {
 
 enum FileMediaType { yaml, json }
 
-enum GlobalPolicyType { none, input, output, both }
+enum GlobalPolicyType { none, input, output, inputOutput, error }
 
 class _CustomGlobalPolicyMeta {
   GlobalPolicyType globalPolicyType;
@@ -119,13 +120,18 @@ class _GlobalPoliciesSubScreenState extends State<GlobalPoliciesSubScreen> {
       queryParameters: "fields=name&fields=global_policy_url",
       ignoreUIError: true,
     );
+    final errorGlobalPolicy = await globalPoliciesService.getErrorGlobalPolicy(
+      widget.environment,
+      organizationName,
+      catalogName,
+      configuredGatewayName,
+      queryParameters: "fields=name&fields=global_policy_url",
+      ignoreUIError: true,
+    );
 
-    final prehookGlobalPolicyURL = (prehookGlobalPolicy != null)
-        ? prehookGlobalPolicy.globalPolicyURL ?? ''
-        : '';
-    final posthookGlobalPolicyURL = (posthookGlobalPolicy != null)
-        ? posthookGlobalPolicy.globalPolicyURL ?? ''
-        : '';
+    final prehookGlobalPolicyURL = prehookGlobalPolicy?.globalPolicyURL;
+    final posthookGlobalPolicyURL = posthookGlobalPolicy?.globalPolicyURL;
+    final errorGlobalPolicyURL = errorGlobalPolicy?.globalPolicyURL;
 
     globalPolicies = (await globalPoliciesService.listGlobalPolicies(
       widget.environment,
@@ -138,11 +144,10 @@ class _GlobalPoliciesSubScreenState extends State<GlobalPoliciesSubScreen> {
       GlobalPolicyType type = GlobalPolicyType.none;
       if (globalPolicy.url == prehookGlobalPolicyURL) {
         type = GlobalPolicyType.input;
-      }
-      if (globalPolicy.url == posthookGlobalPolicyURL) {
-        type = (type == GlobalPolicyType.input)
-            ? GlobalPolicyType.both
-            : GlobalPolicyType.output;
+      } else if (globalPolicy.url == posthookGlobalPolicyURL) {
+        type = GlobalPolicyType.output;
+      } else if (globalPolicy.url == errorGlobalPolicyURL) {
+        type = GlobalPolicyType.error;
       }
       return _CustomGlobalPolicyMeta(type, globalPolicy);
     }).toList();
@@ -278,7 +283,6 @@ class _GlobalPoliciesSubScreenState extends State<GlobalPoliciesSubScreen> {
   Widget? mapGlobalPolicyTypeToIcon(GlobalPolicyType type) {
     switch (type) {
       case GlobalPolicyType.none:
-        // return const SizedBox(width: 32);
         return null;
       case GlobalPolicyType.input:
         return Tooltip(
@@ -290,85 +294,77 @@ class _GlobalPoliciesSubScreenState extends State<GlobalPoliciesSubScreen> {
           message: "Assigned as Posthook Global Policy",
           child: Image.asset("assets/icons/output-64.png", width: 32),
         );
-      case GlobalPolicyType.both:
+      case GlobalPolicyType.inputOutput:
         return Tooltip(
           message: "Assigned as Prehook & Posthook Global Policy",
           child: Image.asset("assets/icons/input-ouput-64.png", width: 32),
         );
+      case GlobalPolicyType.error:
+        return Tooltip(
+          message: "Assigned as Error Global Policy",
+          child: Image.asset("assets/icons/error-handling-64.png", width: 32),
+        );
     }
   }
 
-  Future<void> handlePrehookPolicyAssignment(int globalPolicyIndex) async {
+  Future<void> handleGlobalPolicyAssignment(
+      int globalPolicyIndex, GlobalPolicyType type) async {
     setState(() => _isLoading = true);
     final globalPoliciesService = GlobalPoliciesService.getInstance();
-    final globalPolicyType = globalPolicies[globalPolicyIndex].globalPolicyType;
-    if (globalPolicyType == GlobalPolicyType.none ||
-        globalPolicyType == GlobalPolicyType.output) {
-      bool isAssigned = await globalPoliciesService.assignPrehookGlobalPolicy(
-          environment: widget.environment,
-          organizationName: orgs[_organizationIndex].name!,
-          catalogName: catalogs[_catalogIndex].name,
-          configuredGatewayName:
-              configuredGateways[_configuredGatewayIndex].name,
-          globalPolicyUrl:
-              globalPolicies[globalPolicyIndex].globalPolicyMeta.url!);
-      if (isAssigned) {
-        globalPolicies[globalPolicyIndex].globalPolicyType =
-            (globalPolicyType == GlobalPolicyType.output)
-                ? GlobalPolicyType.both
-                : GlobalPolicyType.input;
-      }
-    } else {
-      bool isUnassigned = await globalPoliciesService.deletePrehookGlobalPolicy(
+    Function assignGlobalPolicy =
+        globalPoliciesService.assignPrehookGlobalPolicy;
+    switch (type) {
+      case GlobalPolicyType.input:
+        assignGlobalPolicy = globalPoliciesService.assignPrehookGlobalPolicy;
+        break;
+      case GlobalPolicyType.output:
+        assignGlobalPolicy = globalPoliciesService.assignPosthookGlobalPolicy;
+        break;
+      case GlobalPolicyType.error:
+        assignGlobalPolicy = globalPoliciesService.assignErrorGlobalPolicy;
+        break;
+      default:
+    }
+    bool isAssigned = await assignGlobalPolicy(
         environment: widget.environment,
         organizationName: orgs[_organizationIndex].name!,
         catalogName: catalogs[_catalogIndex].name,
         configuredGatewayName: configuredGateways[_configuredGatewayIndex].name,
-      );
-      if (isUnassigned) {
-        globalPolicies[globalPolicyIndex].globalPolicyType =
-            (globalPolicyType == GlobalPolicyType.both)
-                ? GlobalPolicyType.output
-                : GlobalPolicyType.none;
-      }
+        globalPolicyUrl:
+            globalPolicies[globalPolicyIndex].globalPolicyMeta.url!);
+    if (isAssigned) {
+      globalPolicies[globalPolicyIndex].globalPolicyType = type;
     }
     setState(() => _isLoading = false);
   }
 
-  Future<void> handlePosthookPolicyAssignment(int globalPolicyIndex) async {
+  Future<void> handleGlobalPolicyUnassignment(
+      int globalPolicyIndex, GlobalPolicyType type) async {
     setState(() => _isLoading = true);
     final globalPoliciesService = GlobalPoliciesService.getInstance();
-    final globalPolicyType = globalPolicies[globalPolicyIndex].globalPolicyType;
-    if (globalPolicyType == GlobalPolicyType.none ||
-        globalPolicyType == GlobalPolicyType.input) {
-      bool isAssigned = await globalPoliciesService.assignPosthookGlobalPolicy(
-          environment: widget.environment,
-          organizationName: orgs[_organizationIndex].name!,
-          catalogName: catalogs[_catalogIndex].name,
-          configuredGatewayName:
-              configuredGateways[_configuredGatewayIndex].name,
-          globalPolicyUrl:
-              globalPolicies[globalPolicyIndex].globalPolicyMeta.url!);
-      if (isAssigned) {
-        globalPolicies[globalPolicyIndex].globalPolicyType =
-            (globalPolicyType == GlobalPolicyType.input)
-                ? GlobalPolicyType.both
-                : GlobalPolicyType.output;
-      }
-    } else {
-      bool isUnassigned =
-          await globalPoliciesService.deletePosthookGlobalPolicy(
-        environment: widget.environment,
-        organizationName: orgs[_organizationIndex].name!,
-        catalogName: catalogs[_catalogIndex].name,
-        configuredGatewayName: configuredGateways[_configuredGatewayIndex].name,
-      );
-      if (isUnassigned) {
-        globalPolicies[globalPolicyIndex].globalPolicyType =
-            (globalPolicyType == GlobalPolicyType.both)
-                ? GlobalPolicyType.input
-                : GlobalPolicyType.none;
-      }
+    Function deleteGlobalPolicy =
+        globalPoliciesService.deletePrehookGlobalPolicy;
+    switch (type) {
+      case GlobalPolicyType.input:
+        deleteGlobalPolicy = globalPoliciesService.deletePrehookGlobalPolicy;
+        break;
+      case GlobalPolicyType.output:
+        deleteGlobalPolicy = globalPoliciesService.deletePosthookGlobalPolicy;
+        break;
+      case GlobalPolicyType.error:
+        deleteGlobalPolicy = globalPoliciesService.deleteErrorGlobalPolicy;
+        break;
+      default:
+    }
+    bool isAssigned = await deleteGlobalPolicy(
+      environment: widget.environment,
+      organizationName: orgs[_organizationIndex].name!,
+      catalogName: catalogs[_catalogIndex].name,
+      configuredGatewayName: configuredGateways[_configuredGatewayIndex].name,
+    );
+    if (isAssigned) {
+      globalPolicies[globalPolicyIndex].globalPolicyType =
+          GlobalPolicyType.none;
     }
     setState(() => _isLoading = false);
   }
@@ -393,7 +389,6 @@ class _GlobalPoliciesSubScreenState extends State<GlobalPoliciesSubScreen> {
             ) ??
             false;
       }
-
       if (isConfirmed) {
         file.writeAsString(code);
       }
@@ -494,38 +489,53 @@ class _GlobalPoliciesSubScreenState extends State<GlobalPoliciesSubScreen> {
                       itemBuilder: (ctx, index) {
                         return ListTile(
                           leading: mapGlobalPolicyTypeToIcon(
-                              globalPolicies[index].globalPolicyType),
+                            globalPolicies[index].globalPolicyType,
+                          ),
                           tileColor:
                               ButtonState.all(Colors.black.withOpacity(0.4)),
                           title: Text(
                               globalPolicies[index].globalPolicyMeta.title ??
                                   ""),
-                          subtitle:
-                              Text(globalPolicies[index].globalPolicyMeta.name),
+                          subtitle: Text(
+                              "${globalPolicies[index].globalPolicyMeta.name}:${globalPolicies[index].globalPolicyMeta.version}"),
                           trailing: Row(
                             children: [
                               Button(
                                 child: globalPolicies[index].globalPolicyType ==
-                                            GlobalPolicyType.input ||
-                                        globalPolicies[index]
-                                                .globalPolicyType ==
-                                            GlobalPolicyType.both
-                                    ? const Text("Unassign Prehook")
-                                    : const Text("Assign Prehook"),
-                                onPressed: () async =>
-                                    await handlePrehookPolicyAssignment(index),
-                              ),
-                              const SizedBox(width: 10),
-                              Button(
-                                child: globalPolicies[index].globalPolicyType ==
-                                            GlobalPolicyType.output ||
-                                        globalPolicies[index]
-                                                .globalPolicyType ==
-                                            GlobalPolicyType.both
-                                    ? const Text("Unassign Posthook")
-                                    : const Text("Assign Posthook"),
-                                onPressed: () async =>
-                                    handlePosthookPolicyAssignment(index),
+                                        GlobalPolicyType.none
+                                    ? const Text("Assign")
+                                    : const Text("Unassign"),
+                                onPressed: () async {
+                                  if (globalPolicies[index].globalPolicyType !=
+                                      GlobalPolicyType.none) {
+                                    handleGlobalPolicyUnassignment(
+                                      index,
+                                      globalPolicies[index].globalPolicyType,
+                                    );
+                                  } else {
+                                    final choiceIndex = await showDialog<int>(
+                                          barrierDismissible: true,
+                                          context: context,
+                                          builder: (ctx) {
+                                            return const ChoicesPopUp(
+                                                "Select Global Policy Type", [
+                                              "Pre-request global policy",
+                                              "Post-response global policy",
+                                              "Error global policy",
+                                            ]);
+                                          },
+                                        ) ??
+                                        -1;
+                                    if (choiceIndex >= 0) {
+                                      GlobalPolicyType type = [
+                                        GlobalPolicyType.input,
+                                        GlobalPolicyType.output,
+                                        GlobalPolicyType.error
+                                      ][choiceIndex];
+                                      handleGlobalPolicyAssignment(index, type);
+                                    }
+                                  }
+                                },
                               ),
                               const SizedBox(width: 10),
                               Tooltip(
@@ -559,11 +569,12 @@ class _GlobalPoliciesSubScreenState extends State<GlobalPoliciesSubScreen> {
                                           context: context,
                                           builder: (ctx) {
                                             return YamlViewer(
-                                                title: globalPolicies[index]
-                                                    .globalPolicyMeta
-                                                    .title!,
-                                                version: version,
-                                                code: code);
+                                              title: globalPolicies[index]
+                                                  .globalPolicyMeta
+                                                  .title!,
+                                              version: version,
+                                              code: code,
+                                            );
                                           });
                                     }
                                   },
