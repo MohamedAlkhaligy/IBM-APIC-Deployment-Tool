@@ -41,7 +41,7 @@ class ProductController {
 
   List<ProductInfo> get productsInfos {
     return _productsInfos
-        .where((productInfo) => productInfo.adaptor.info.name
+        .where((productInfo) => productInfo.name
             .toLowerCase()
             .contains(_searchBy.toLowerCase().trim()))
         .toList();
@@ -66,14 +66,12 @@ class ProductController {
   void sort(SortType sortType) {
     switch (sortType) {
       case SortType.ascending:
-        _productsInfos
-            .sort((a, b) => a.adaptor.info.name.compareTo(b.adaptor.info.name));
+        _productsInfos.sort((a, b) => a.name.compareTo(b.name));
         break;
       case SortType.created:
         break;
       case SortType.descending:
-        _productsInfos
-            .sort((a, b) => b.adaptor.info.name.compareTo(a.adaptor.info.name));
+        _productsInfos.sort((a, b) => b.name.compareTo(a.name));
         break;
       case SortType.recent:
         break;
@@ -121,7 +119,7 @@ class ProductController {
           if (!hasPublished) {
             bool isContinue = await ErrorHandlingUtilities.instance
                     .showPopUpErrorWithDilemma(
-                        "An error occured while publishing ${productInfos.adaptor.info.name}:${productInfos.adaptor.info.version}. Do you wish to continue with other products?") ??
+                        "An error occured while publishing ${productInfos.name}:${productInfos.version}. Do you wish to continue with other products?") ??
                 false;
             if (!isContinue) {
               break;
@@ -203,24 +201,18 @@ class ProductController {
     return false;
   }
 
-  Future<void> _addProduct(XFile file) async {
+  Future<void> _addProduct(XFile productFile) async {
     Map<String, ApiAdaptor> apis = {};
     List<OpenAPIInfo> openAPIInfos = [];
     try {
       // Parse file to product
-      String productAsString = await File(file.path).readAsString();
-      final productAsYaml = loadYaml(productAsString);
-      final productAsJson = jsonDecode(json.encode(productAsYaml));
-      final product = Product.fromJson(productAsJson);
+      final product =
+          await ProductService.getInstance().loadProduct(productFile.path);
 
-      // Check if the product APIs exist
-      // if (product.apis.entries.isEmpty) {
-      //   throw ProductWithNoAPIsException("Product contains no API");
-      // }
-
+      // Only check if the apis exist
       product.apis.forEach((key, api) async {
-        String openAPIPath =
-            path.join(path.dirname(file.path), api.ref.replaceAll("/", "\\"));
+        String openAPIPath = path.join(
+            path.dirname(productFile.path), api.ref.replaceAll("/", "\\"));
         if (!await FileSystemEntity.isFile(openAPIPath)) {
           throw PathNotFileException(
               "One or more oh the API paths provided in the ${product.info.name}:${product.info.version} are not valid file path");
@@ -233,34 +225,27 @@ class ProductController {
               "One or more oh the API paths provided in the ${product.info.name}:${product.info.version} are not yaml-based");
         }
 
+        // This is to check if the yaml file contains api info object giving
+        // higher chance that this is an api file. The actaul validation is done
+        // from the api management server when the product is published
         final openAPIAsString = await File(openAPIPath).readAsString();
         final openAPIAsYaml = loadYaml(openAPIAsString);
         final openAPIAsJson = jsonDecode(json.encode(openAPIAsYaml));
-        final openAPI = OpenAPI.fromJson(openAPIAsJson);
-
-        apis[key] =
-            ApiAdaptor(name: "${openAPI.info.name}:${openAPI.info.version}");
-        openAPIInfos.add(
-          OpenAPIInfo(
-            path: openAPIPath,
-            filename: openAPIFilename,
-            name: openAPI.info.name,
-            version: openAPI.info.version,
-          ),
-        );
+        OpenAPI.fromJson(openAPIAsJson);
       });
 
       // Validation Done
       // Add product to list of products
       _productsInfos.add(
         ProductInfo(
-          openAPIInfos: openAPIInfos,
-          adaptor: ProductAdaptor.fromProduct(product, apis),
+          filePath: productFile.path,
+          name: product.info.name,
+          version: product.info.version,
         ),
       );
     } catch (error, traceStack) {
       GlobalConfigurations.logger.e(
-        "ProductsSubScreen:addProduct:${file.path}",
+        "ProductsSubScreen:addProduct:${productFile.path}",
         error,
         traceStack,
       );

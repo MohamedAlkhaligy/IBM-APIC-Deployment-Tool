@@ -1,14 +1,15 @@
-import 'package:ibm_apic_dt/models/products/openapi_info.dart';
-import 'package:ibm_apic_dt/models/products/product_adaptor.dart';
-
 class ProductInfo {
   bool isSelected;
-  List<OpenAPIInfo> openAPIInfos;
-  ProductAdaptor adaptor;
+  String filePath;
+  String name;
+  String title;
+  String version;
 
   ProductInfo({
-    required this.adaptor,
-    required this.openAPIInfos,
+    required this.filePath,
+    required this.name,
+    required this.version,
     this.isSelected = false,
-  });
+    String? title,
+  }) : title = title ?? name;
 }

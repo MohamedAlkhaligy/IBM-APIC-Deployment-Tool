@@ -366,22 +366,14 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
                                                 .isSelected,
                                           ),
                                           title: Text(
-                                              _productController
-                                                      .productsInfos[index]
-                                                      .adaptor
-                                                      .info
-                                                      .title ??
-                                                  _productController
-                                                      .productsInfos[index]
-                                                      .adaptor
-                                                      .info
-                                                      .name,
-                                              textScaleFactor: 1),
-                                          subtitle: Text(_productController
-                                              .productsInfos[index]
-                                              .adaptor
-                                              .info
-                                              .version),
+                                            _productController
+                                                .productsInfos[index].title,
+                                            textScaleFactor: 1,
+                                          ),
+                                          subtitle: Text(
+                                            _productController
+                                                .productsInfos[index].version,
+                                          ),
                                           trailing: Row(
                                             children: [
                                               _buildButton(
@@ -391,7 +383,7 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
                                                 tooltipMessage:
                                                     "Publish Product",
                                                 confirmationText:
-                                                    "Do you want to publish ${_productController.productsInfos[index].adaptor.info.name}:${_productController.productsInfos[index].adaptor.info.version} to ${_productController.catalogs[_productController.catalogIndex].name}",
+                                                    "Do you want to publish ${_productController.productsInfos[index].name}:${_productController.productsInfos[index].version} to ${_productController.catalogs[_productController.catalogIndex].name}",
                                                 onConfirmedFunction: () async {
                                                   setState(() =>
                                                       _isPublishing = true);
