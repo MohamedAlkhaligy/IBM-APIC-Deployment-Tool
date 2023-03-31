@@ -1,16 +1,13 @@
-# ibm_apic_dt
+## IBM API Connect Deployment Tool
 
-A new Flutter project.
+A simple GUI-based deployment tool for IBM API Connect that works as an alternative to
+the developer toolkit command-line tool.
 
-## Getting Started
+#### The tool supports yaml-based files.
 
-This project is a starting point for a Flutter application.
+The tool is capable of (so far):
+- Publishing products.
+- Publishing, deleting, and viewing global policies
+- Assigning global policies as pre-hook, post-hook, or error.
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+The tool was tested on [LTE 10.0.5.0](https://www.ibm.com/support/pages/node/6592957)
