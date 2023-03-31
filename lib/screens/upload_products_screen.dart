@@ -63,8 +63,10 @@ class _UploadProductsScreenState extends State<UploadProductsScreen> {
                     DropTarget(
                       onDragDone: (detail) async {
                         setState(() => _isPublishing = true);
+                        bool ignoreError = detail.files.length != 1;
                         bool areFilesLoaded = await widget._productController
-                            .loadProducts(detail.files);
+                            .loadProducts(detail.files,
+                                ignoreError: ignoreError);
                         if (context.mounted) {
                           Navigator.of(context).pop(areFilesLoaded);
                         }
