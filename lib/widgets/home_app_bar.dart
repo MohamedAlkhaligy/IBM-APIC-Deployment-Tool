@@ -28,7 +28,8 @@ class HomeAppBar extends StatelessWidget {
                   Github.github_circled,
                   size: 20,
                 ),
-                onPressed: () async => await launchUrl(Uri.parse("")),
+                onPressed: () async => await launchUrl(Uri.parse(
+                    "https://github.com/MohamedAlkhaligy/IBM-APIC-Deployment-Tool")),
               ),
               IconButton(
                 icon: const Icon(
