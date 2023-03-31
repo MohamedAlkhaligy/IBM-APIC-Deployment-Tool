@@ -1,6 +1,8 @@
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../screens/home_screen.dart';
+import '../icons/github_icons.dart';
 
 class HomeAppBar extends StatelessWidget {
   final String text;
@@ -19,13 +21,24 @@ class HomeAppBar extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(text),
-          IconButton(
-            icon: const Icon(
-              FluentIcons.home,
-              size: 20,
-            ),
-            onPressed: () => Navigator.of(context)
-                .pushReplacementNamed(HomeScreen.routeName),
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(
+                  Github.github_circled,
+                  size: 20,
+                ),
+                onPressed: () async => await launchUrl(Uri.parse("")),
+              ),
+              IconButton(
+                icon: const Icon(
+                  FluentIcons.home,
+                  size: 20,
+                ),
+                onPressed: () => Navigator.of(context)
+                    .pushReplacementNamed(HomeScreen.routeName),
+              ),
+            ],
           )
         ],
       ),
