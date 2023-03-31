@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:logger/logger.dart';
 
-import './auth_service.dart';
 import '../global_configurations.dart';
+import './auth_service.dart';
 import '../models/gateways/configured_gateway.dart';
 import '../models/environment.dart';
 import '../models/http_headers.dart';
@@ -27,7 +27,7 @@ class ConfiguredGatewayService {
     bool ignoreUIError = false,
   }) async {
     List<ConfiguredGateway> orgs = [];
-    final logger = Logger();
+    final logger = GlobalConfigurations.logger;
     try {
       // await AuthService.getInstance().introspectAndLogin(environment);
 

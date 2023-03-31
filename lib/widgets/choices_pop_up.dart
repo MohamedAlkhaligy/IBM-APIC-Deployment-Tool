@@ -31,13 +31,17 @@ class ChoicesPopUp extends StatelessWidget {
                     child: SimpleDialog(
                       shape: const RoundedRectangleBorder(
                           borderRadius: BorderRadius.all(Radius.circular(16))),
-                      title: SelectableText(_message),
+                      title: Text(_message),
                       children: _choices
                           .asMap()
                           .entries
                           .map<Widget>(
                             (entry) => SimpleDialogOption(
-                              child: Text(entry.value),
+                              child: Text(
+                                entry.value,
+                                style:
+                                    const TextStyle(color: Colors.amberAccent),
+                              ),
                               onPressed: () {
                                 Navigator.of(context).pop(entry.key);
                               },

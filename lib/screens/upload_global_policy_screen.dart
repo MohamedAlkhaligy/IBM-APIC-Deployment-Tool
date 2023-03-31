@@ -6,7 +6,6 @@ import 'package:desktop_drop/desktop_drop.dart';
 import 'package:cross_file/cross_file.dart';
 
 import '../models/environment.dart';
-import 'package:path_provider/path_provider.dart';
 import '../services/global_policies_service.dart';
 import '../utilities/error_handling_utilities.dart';
 import '../widgets/confirmation_pop_up.dart';

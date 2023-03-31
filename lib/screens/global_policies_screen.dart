@@ -1,5 +1,4 @@
 import 'package:fluent_ui/fluent_ui.dart';
-import 'package:flutter/material.dart' as material;
 
 import '../models/environment.dart';
 import 'global_policies_subscreen.dart';
@@ -20,19 +19,8 @@ class _GlobalPoliciesScreenState extends State<GlobalPoliciesScreen> {
 
   Tab generateTab(Key key) {
     late Tab tab;
-    TextEditingController controller =
-        TextEditingController(text: 'Tab $_counter');
-    bool isReadOnly = true;
     tab = Tab(
-      // text: Text('Tab $_counter'),
-      text: material.EditableText(
-        controller: controller,
-        cursorColor: Colors.white,
-        selectionColor: Colors.white.withOpacity(0.3),
-        focusNode: FocusNode(),
-        backgroundCursorColor: Colors.blue,
-        style: TextStyle(),
-      ),
+      text: Text('Tab $_counter'),
       key: key,
       semanticLabel: 'Tab #${_counter++}',
       icon: const FlutterLogo(),

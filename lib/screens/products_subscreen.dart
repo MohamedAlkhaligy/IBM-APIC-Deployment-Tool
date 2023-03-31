@@ -227,8 +227,14 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
                         ),
                       ],
                     ),
+                    const SizedBox(width: 10),
                     if (_productController.productsInfos.isNotEmpty)
-                      _buildGlobalButtons()
+                      _buildGlobalButtons(),
+                    if (_productController.productsInfos.isEmpty)
+                      IconButton(
+                        icon: const Icon(FluentIcons.refresh),
+                        onPressed: () => _refreshData(),
+                      )
                   ],
                 ),
                 const SizedBox(height: 15),
@@ -379,21 +385,22 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
                                           trailing: Row(
                                             children: [
                                               _buildButton(
-                                                  icon: const Icon(FluentIcons
-                                                      .publish_content),
-                                                  tooltipMessage:
-                                                      "Publish Product",
-                                                  confirmationText:
-                                                      "Do you want to publish ${_productController.productsInfos[index].adaptor.info.name}:${_productController.productsInfos[index].adaptor.info.version} to ${_productController.catalogs[_productController.catalogIndex].name}",
-                                                  onConfirmedFunction:
-                                                      () async {
-                                                    setState(() =>
-                                                        _isPublishing = true);
-                                                    await _productController
-                                                        .publish(index);
-                                                    setState(() =>
-                                                        _isPublishing = false);
-                                                  }),
+                                                icon: const Icon(
+                                                    FluentIcons.publish_content,
+                                                    size: 18),
+                                                tooltipMessage:
+                                                    "Publish Product",
+                                                confirmationText:
+                                                    "Do you want to publish ${_productController.productsInfos[index].adaptor.info.name}:${_productController.productsInfos[index].adaptor.info.version} to ${_productController.catalogs[_productController.catalogIndex].name}",
+                                                onConfirmedFunction: () async {
+                                                  setState(() =>
+                                                      _isPublishing = true);
+                                                  await _productController
+                                                      .publish(index);
+                                                  setState(() =>
+                                                      _isPublishing = false);
+                                                },
+                                              ),
                                               const SizedBox(width: 10),
                                               Button(
                                                 child: const Text("Subscribe"),

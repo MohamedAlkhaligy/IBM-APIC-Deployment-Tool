@@ -1,11 +1,15 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:ibm_apic_dt/screens/environment_screen.dart';
 import 'package:logger/logger.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:system_theme/system_theme.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import './global_configurations.dart';
 import './models/environment.dart';
@@ -14,17 +18,69 @@ import './navigation_service.dart';
 import './providers/environments_provider.dart';
 import './screens/home_screen.dart';
 import './utilities/routing_utilities.dart';
+import 'file_ouput.dart' as output;
 
-void main() async {
+void createAppDirectories(String appDocumentDirectoryPath) {
+  String hivePath = "$appDocumentDirectoryPath\\hive";
+  String tempPath = "$appDocumentDirectoryPath\\temp";
+  String logsPath = "$appDocumentDirectoryPath\\logs";
+  Directory(hivePath).create(recursive: true);
+  Directory(tempPath).create(recursive: true);
+  Directory(logsPath).create(recursive: true);
+}
+
+Future<void> loadConfigurations() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Hive.initFlutter("${Directory.current.path}\\hive\\");
+  GlobalConfigurations.appDocumentDirectoryPath =
+      "${(await getApplicationDocumentsDirectory()).path}\\IBM API Connect Deployment Tool";
+  createAppDirectories(GlobalConfigurations.appDocumentDirectoryPath);
+  if (kDebugMode) {
+    GlobalConfigurations.logger = Logger();
+  } else {
+    GlobalConfigurations.logger = Logger(
+      output: output.FileOutput(
+        File("${GlobalConfigurations.appDocumentDirectoryPath}\\logs\\log.txt"),
+      ),
+      printer: PrettyPrinter(
+        printTime: true,
+      ),
+      level: Level.error,
+    );
+  }
+}
+
+Future<EnvironmentsProvider> loadEnvironmentsProviderFromHiveDatabase() async {
+  await Hive.initFlutter(
+      "${GlobalConfigurations.appDocumentDirectoryPath}\\hive");
+
   Hive.registerAdapter(EnvironmentsAdapter());
   Hive.registerAdapter(EnvironmentAdapter());
-  final environmenstBox = await Hive.openBox<Environments>('environmentBox');
+
+  const secureStorage = FlutterSecureStorage();
+  final encryptionKeyString = await secureStorage.read(key: 'environmentsKey');
+  if (encryptionKeyString == null) {
+    final key = Hive.generateSecureKey();
+    await secureStorage.write(
+      key: 'environmentsKey',
+      value: base64UrlEncode(key),
+    );
+  }
+
+  final key = await const FlutterSecureStorage().read(key: 'environmentsKey');
+  final encryptionKeyUint8List = base64Url.decode(key!);
+  final environmenstBox = await Hive.openBox<Environments>(
+    'environmentBox',
+    encryptionCipher: HiveAesCipher(encryptionKeyUint8List),
+  );
+  return EnvironmentsProvider(environmenstBox);
+}
+
+void main() async {
+  await loadConfigurations();
+  final environmentsProvider = await loadEnvironmentsProviderFromHiveDatabase();
   runApp(MultiProvider(
     providers: [
-      ChangeNotifierProvider(
-          create: (context) => EnvironmentsProvider(environmenstBox)),
+      ChangeNotifierProvider(create: (context) => environmentsProvider),
     ],
     child: const App(),
   ));
@@ -48,7 +104,6 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Logger.level = Level.nothing;
     if (Platform.isWindows) {
       HttpOverrides.global = MyHttpOverrides();
     }

@@ -1,4 +1,5 @@
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:logger/logger.dart';
 import 'package:system_theme/system_theme.dart';
 
 enum Realm { admin, provider }
@@ -17,6 +18,10 @@ class GlobalConfigurations {
     'lighter': SystemTheme.accentColor.lighter,
     'lightest': SystemTheme.accentColor.lightest,
   };
+
+  static String appDocumentDirectoryPath = "";
+
+  static late Logger logger;
 
   static const String debugginProxyURL = "https://localhost:2000";
 }

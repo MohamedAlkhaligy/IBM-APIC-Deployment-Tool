@@ -1,26 +1,23 @@
-// import 'dart:convert';
-// import 'dart:html';
-
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:fluent_ui/fluent_ui.dart';
-import 'package:ibm_apic_dt/widgets/choices_pop_up.dart';
 import 'package:path/path.dart';
 
-import '../global_configurations.dart';
-import '../navigation_service.dart';
-import '../widgets/confirmation_pop_up.dart';
 import './upload_global_policy_screen.dart';
+import '../global_configurations.dart';
 import '../models/catalogs/catalog.dart';
 import '../models/environment.dart';
 import '../models/gateways/configured_gateway.dart';
 import '../models/global_policies/global_policy_meta.dart';
 import '../models/organizations/organization.dart';
+import '../navigation_service.dart';
 import '../services/catalogs_service.dart';
 import '../services/configured_gateway_service.dart';
 import '../services/global_policies_service.dart';
 import '../services/organization_service.dart';
+import '../widgets/choices_pop_up.dart';
+import '../widgets/confirmation_pop_up.dart';
 import '../widgets/loader.dart';
 import '../widgets/responsive_text.dart';
 import '../widgets/yaml_viewer.dart';
@@ -518,11 +515,13 @@ class _GlobalPoliciesSubScreenState extends State<GlobalPoliciesSubScreen> {
                                           context: context,
                                           builder: (ctx) {
                                             return const ChoicesPopUp(
-                                                "Select Global Policy Type", [
-                                              "Pre-request global policy",
-                                              "Post-response global policy",
-                                              "Error global policy",
-                                            ]);
+                                              "Select Global Policy Type",
+                                              [
+                                                "Prehook",
+                                                "Posthook",
+                                                "Error",
+                                              ],
+                                            );
                                           },
                                         ) ??
                                         -1;
@@ -613,8 +612,6 @@ class _GlobalPoliciesSubScreenState extends State<GlobalPoliciesSubScreen> {
                                       globalPolicyName: name,
                                       globalPolicyVersion: version,
                                     );
-                                    print(name);
-                                    print(version);
                                     await download(name, version, code);
                                   },
                                 ),

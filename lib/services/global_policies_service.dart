@@ -2,10 +2,9 @@ import 'dart:convert';
 
 import 'package:logger/logger.dart';
 import 'package:yaml/yaml.dart';
-import 'package:yaml_writer/yaml_writer.dart';
 
-import './auth_service.dart';
 import '../global_configurations.dart';
+import './auth_service.dart';
 import '../models/environment.dart';
 import '../models/global_policies/global_policy_meta.dart';
 import '../models/global_policies/list_global_policies_response_body.dart';
@@ -23,6 +22,8 @@ class GlobalPoliciesService {
   factory GlobalPoliciesService.getInstance() {
     return _globalPoliciesService;
   }
+
+  final logger = GlobalConfigurations.logger;
 
   String mapHookType(HookType hookType) {
     switch (hookType) {
@@ -44,7 +45,6 @@ class GlobalPoliciesService {
     bool ignoreUIError = false,
   }) async {
     List<GlobalPolicyMeta> globalPolicies = [];
-    final logger = Logger();
     try {
       // await AuthService.getInstance().introspectAndLogin(environment);
 
@@ -102,7 +102,6 @@ class GlobalPoliciesService {
     required String configuredGatewayName,
     ignoreUIError = false,
   }) async {
-    var logger = Logger();
     try {
       // await AuthService.getInstance().introspectAndLogin(environment);
       String url =
@@ -112,17 +111,15 @@ class GlobalPoliciesService {
         "global_policy": loadYaml(globalPolicyYamlString),
       };
 
-      final yamlWriter = YAMLWriter();
-
       HTTPHeaders headers = HTTPHeaders(
         accept: 'application/json',
-        contentType: 'application/yaml',
+        contentType: 'application/json',
         authorization: environment.accessToken,
       );
 
       var httpResponse = await HTTPUtilites.getInstance().post(
         url,
-        yamlWriter.write(requestBody),
+        jsonEncode(requestBody),
         headers.typedJson,
         ignoreUIError: ignoreUIError,
         ignoreReauthError: true,
@@ -140,7 +137,7 @@ class GlobalPoliciesService {
         headers.authorization = accessToken;
         httpResponse = await HTTPUtilites.getInstance().post(
           url,
-          yamlWriter.write(requestBody),
+          jsonEncode(requestBody),
           headers.typedJson,
           ignoreUIError: ignoreUIError,
         );
@@ -169,7 +166,6 @@ class GlobalPoliciesService {
     required String globalPolicyVersion,
     ignoreUIError = false,
   }) async {
-    final logger = Logger();
     try {
       // await AuthService.getInstance().introspectAndLogin(environment);
 
@@ -288,7 +284,6 @@ class GlobalPoliciesService {
     HookType hookType = HookType.pre,
     bool ignoreUIError = false,
   }) async {
-    var logger = Logger();
     try {
       // await AuthService.getInstance().introspectAndLogin(environment);
 
@@ -408,7 +403,6 @@ class GlobalPoliciesService {
     HookType hookType = HookType.pre,
     bool ignoreUIError = false,
   }) async {
-    final logger = Logger();
     GlobalPolicyMeta? globalPolicyMeta;
     try {
       // await AuthService.getInstance().introspectAndLogin(environment);
@@ -468,7 +462,6 @@ class GlobalPoliciesService {
     String queryParameters = "",
     ignoreUIError = false,
   }) async {
-    final logger = Logger();
     try {
       // await AuthService.getInstance().introspectAndLogin(environment);
 
@@ -580,7 +573,6 @@ class GlobalPoliciesService {
     HookType hookType = HookType.pre,
     bool ignoreUIError = false,
   }) async {
-    final logger = Logger();
     try {
       // await AuthService.getInstance().introspectAndLogin(environment);
 

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart';
 import 'package:logger/logger.dart';
 
+import '../global_configurations.dart';
 import '../models/http_error_response.dart';
 import '../utilities/error_handling_utilities.dart';
 
@@ -10,6 +11,7 @@ import '../utilities/error_handling_utilities.dart';
 /// Returns response in case of success
 /// Returns null in case of failure and pop up an error dialog
 class HTTPUtilites {
+  final logger = GlobalConfigurations.logger;
   static final _httpUtilites = HTTPUtilites._internal();
 
   HTTPUtilites._internal();
@@ -37,7 +39,6 @@ class HTTPUtilites {
     bool ignoreReauthError = false,
   }) async {
     Response? response;
-    var logger = Logger();
 
     logger.i({
       "url": url,
@@ -86,7 +87,6 @@ class HTTPUtilites {
   }) async {
     Response? response;
 
-    var logger = Logger();
     logger.i({
       "url": url,
       "headers": foldedHeaders,
@@ -132,7 +132,6 @@ class HTTPUtilites {
   }) async {
     Response? response;
 
-    var logger = Logger();
     logger.i({
       "url": url,
       "headers": foldedHeaders,

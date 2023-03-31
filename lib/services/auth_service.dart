@@ -42,7 +42,7 @@ class AuthService {
     required String password,
     Realm realm = Realm.provider,
   }) async {
-    var logger = Logger();
+    final logger = GlobalConfigurations.logger;
 
     try {
       final loginJsonTemplate = await FileUtilities.loadFileAsString(
@@ -73,7 +73,7 @@ class AuthService {
       }
     } catch (error) {
       logger.e("AuthService:login", error);
-      ErrorHandlingUtilities.instance.showPopUpError(error.toString());
+      // ErrorHandlingUtilities.instance.showPopUpError(error.toString());
     }
     return "";
   }

@@ -3,6 +3,7 @@ import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 
+import '../global_configurations.dart';
 import './home_screen.dart';
 import '../models/environment.dart';
 import '../providers/environments_provider.dart';
@@ -71,7 +72,7 @@ class _AddEnvironmentScreenState extends State<AddEnvironmentScreen> {
       );
 
       if (accessToken.isNotEmpty) {
-        final logger = Logger();
+        final logger = GlobalConfigurations.logger;
         Environment environment = Environment(
           clientID: _clientIDController.text.trim(),
           clientSecret: _clientSecretController.text.trim(),

@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:cross_file/cross_file.dart';
-import 'package:ibm_apic_dt/errors/product_with_no_apis_exception.dart';
 import 'package:logger/logger.dart';
 import 'package:path/path.dart' as path;
 import 'package:yaml/yaml.dart';
@@ -24,12 +23,13 @@ import '../services/product_service.dart';
 import '../utilities/error_handling_utilities.dart';
 
 class ProductController {
+  final List<ProductInfo> _productsInfos;
+  final Environment _environment;
+
   int _organizationIndex, _catalogIndex, _productsSelected;
   List<Organization> orgs;
   List<Catalog> catalogs;
-  List<ProductInfo> _productsInfos;
   String _searchBy = "";
-  Environment _environment;
 
   ProductController(this._environment)
       : _organizationIndex = 0,
@@ -95,10 +95,12 @@ class ProductController {
 
   Future<bool> publish(index) async {
     return await ProductService.getInstance().publish(
-        _environment,
-        orgs[_organizationIndex].name!,
-        catalogs[_catalogIndex].name,
-        _productsInfos[index]);
+      _environment,
+      orgs[_organizationIndex].name!,
+      catalogs[_catalogIndex].name,
+      _productsInfos[index],
+      queryParameters: "migrate_subscriptions=true",
+    );
   }
 
   Future<void> publishSelected() async {
@@ -113,6 +115,7 @@ class ProductController {
             orgs[_organizationIndex].name!,
             catalogs[_catalogIndex].name,
             productInfos,
+            queryParameters: "migrate_subscriptions=true",
           );
 
           if (!hasPublished) {
@@ -190,7 +193,7 @@ class ProductController {
             .showPopUpError("No valid yaml-based product file has been found");
       }
     } catch (error, stackTrace) {
-      Logger().e(
+      GlobalConfigurations.logger.e(
         "ProductsSubScreen:DragAndDrop",
         error,
         stackTrace,
@@ -256,7 +259,7 @@ class ProductController {
         ),
       );
     } catch (error, traceStack) {
-      Logger().e(
+      GlobalConfigurations.logger.e(
         "ProductsSubScreen:addProduct:${file.path}",
         error,
         traceStack,

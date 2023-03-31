@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:logger/logger.dart';
 
+import '../global_configurations.dart';
 import './auth_service.dart';
 import '../models/environment.dart';
 import '../models/http_headers.dart';
@@ -21,7 +22,7 @@ class OrganizationsService {
   Future<List<Organization>> listOrgs(Environment environment,
       {String queryParameters = "", bool ignoreUIError = false}) async {
     List<Organization> orgs = [];
-    final logger = Logger();
+    final logger = GlobalConfigurations.logger;
     try {
       // await AuthService.getInstance().introspectAndLogin(environment);
 

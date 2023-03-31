@@ -38,6 +38,7 @@ dependencies:
   desktop_drop: ^0.4.1
 
   path: ^1.8.2
+  path_provider: ^2.0.14
   
   http: ^0.13.5
   
@@ -48,13 +49,11 @@ dependencies:
   json_editor: ^0.0.8
   json_annotation: ^4.7.0 # Serialize and Deserialize Json
   yaml: ^3.1.1
-  yaml_writer: ^1.0.3
   flutter_syntax_view: ^4.0.0
 
   # Save data locally
-  shared_preferences: ^2.0.15
   hive_flutter: ^1.1.0
-  hive_generator: ^2.0.0
+  flutter_secure_storage: ^8.0.0
 
   # Logging package
   logger: ^1.1.0
@@ -81,6 +80,8 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^2.0.0
+
+  hive_generator: ^2.0.0
   
 
 # For information on the generic Dart part of this file, see the

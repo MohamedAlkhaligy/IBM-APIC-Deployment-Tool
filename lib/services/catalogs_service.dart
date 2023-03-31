@@ -27,7 +27,7 @@ class CatalogsService {
     bool ignoreUIError = false,
   }) async {
     List<Catalog> catalogs = [];
-    final logger = Logger();
+    final logger = GlobalConfigurations.logger;
     try {
       // await AuthService.getInstance().introspectAndLogin(environment);
 
