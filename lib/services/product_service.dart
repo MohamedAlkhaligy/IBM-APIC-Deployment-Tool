@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:http_parser/http_parser.dart';
-import 'package:logger/logger.dart';
 import 'package:uuid/uuid.dart';
 import 'package:yaml/yaml.dart';
 import 'package:path/path.dart' as path;
@@ -117,7 +116,6 @@ class ProductService {
       final product = await loadProduct(productInfo.filePath);
       final openAPIsInfos =
           await loadProductAPIsInfo(product, productInfo.filePath);
-      print(openAPIsInfos);
       final productAdaptor = loadProductAdaptor(product, openAPIsInfos);
       await productJsonFile.writeAsString(json.encode(productAdaptor.toJson()));
 

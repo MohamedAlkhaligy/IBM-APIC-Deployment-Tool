@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:desktop_drop/desktop_drop.dart';
-import 'package:cross_file/cross_file.dart';
 
 import '../models/environment.dart';
 import '../services/global_policies_service.dart';
@@ -44,7 +43,6 @@ class _UploadGlobalPolicyScreenState extends State<UploadGlobalPolicyScreen>
   int _currentIndex = 0;
   bool _isHighlighted = false;
   final String _message = 'Drop Global Policy Here!';
-  final List<XFile> _list = [];
 
   Widget uploadSingleFileWindow() {
     final screenHeight = MediaQuery.of(context).size.height;

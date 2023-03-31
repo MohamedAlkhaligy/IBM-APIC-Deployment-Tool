@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:cross_file/cross_file.dart';
-import 'package:logger/logger.dart';
 import 'package:path/path.dart' as path;
 import 'package:yaml/yaml.dart';
 
@@ -13,9 +12,6 @@ import '../models/catalogs/catalog.dart';
 import '../models/environment.dart';
 import '../models/organizations/organization.dart';
 import '../models/products/openapi.dart';
-import '../models/products/openapi_info.dart';
-import '../models/products/product.dart';
-import '../models/products/product_adaptor.dart';
 import '../models/products/product_info.dart';
 import '../services/catalogs_service.dart';
 import '../services/organization_service.dart';
@@ -202,8 +198,6 @@ class ProductController {
   }
 
   Future<void> _addProduct(XFile productFile) async {
-    Map<String, ApiAdaptor> apis = {};
-    List<OpenAPIInfo> openAPIInfos = [];
     try {
       // Parse file to product
       final product =

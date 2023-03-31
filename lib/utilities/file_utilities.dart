@@ -1,7 +1,5 @@
 import 'package:flutter/services.dart' show rootBundle;
 
-import 'package:logger/logger.dart';
-
 import '../global_configurations.dart';
 
 class FileUtilities {

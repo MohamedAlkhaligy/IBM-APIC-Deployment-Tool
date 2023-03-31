@@ -1,7 +1,5 @@
 import 'dart:convert';
 
-import 'package:logger/logger.dart';
-
 import '../global_configurations.dart';
 import './auth_service.dart';
 import '../models/environment.dart';

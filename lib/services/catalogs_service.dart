@@ -1,7 +1,5 @@
 import 'dart:convert';
 
-import 'package:logger/logger.dart';
-
 import '../global_configurations.dart';
 import '../models/catalogs/catalog.dart';
 import '../models/catalogs/list_catalogs_response_body.dart';

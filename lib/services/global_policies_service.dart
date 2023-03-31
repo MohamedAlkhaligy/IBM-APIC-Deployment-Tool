@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:logger/logger.dart';
 import 'package:yaml/yaml.dart';
 
 import '../global_configurations.dart';

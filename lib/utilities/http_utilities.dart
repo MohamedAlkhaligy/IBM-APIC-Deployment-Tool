@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:http/http.dart';
-import 'package:logger/logger.dart';
 
 import '../global_configurations.dart';
 import '../models/http_error_response.dart';
