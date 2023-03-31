@@ -1,8 +1,6 @@
-import 'package:desktop_drop/desktop_drop.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:ibm_apic_dt/screens/upload_products_screen.dart';
-import 'package:ibm_apic_dt/utilities/error_handling_utilities.dart';
 
 import '../controllers/products_controller.dart';
 import '../models/environment.dart';
@@ -394,9 +392,9 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
                                                 },
                                               ),
                                               const SizedBox(width: 10),
-                                              Button(
-                                                child: const Text("Subscribe"),
+                                              const Button(
                                                 onPressed: null,
+                                                child: Text("Subscribe"),
                                               ),
                                             ],
                                           ),
