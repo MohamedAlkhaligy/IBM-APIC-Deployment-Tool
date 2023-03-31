@@ -96,6 +96,7 @@ class ProductService {
     String queryParameters = "",
     ignoreError = false,
   }) async {
+    File? productJsonFile;
     try {
       // await AuthService.getInstance().introspectAndLogin(environment);
 
@@ -110,7 +111,7 @@ class ProductService {
       );
 
       final String productFilename = "$id.json";
-      final productJsonFile = await File(
+      productJsonFile = await File(
               "${GlobalConfigurations.appDocumentDirectoryPath}\\temp\\$productFilename")
           .create();
       final product = await loadProduct(productInfo.filePath);
@@ -151,55 +152,50 @@ class ProductService {
         "headers": headers.typedJson,
       });
 
-      try {
-        final dio = Dio(BaseOptions(headers: headers.typedJson));
-        var httpResponse = await dio.post(url, data: formData);
+      final dio = Dio(BaseOptions(headers: headers.typedJson));
+      Response httpResponse;
+      httpResponse = await dio.post(url, data: formData);
 
-        logger.i({
-          "response_from": url,
-          "body": httpResponse.toString(),
-        });
-
-        if (httpResponse.statusCode == 401) {
-          final accessToken = await AuthService.getInstance().login(
-            clientID: environment.clientID,
-            clientSecret: environment.clientSecret,
-            serverURL: environment.serverURL,
-            username: environment.username,
-            password: environment.password,
-          );
-          environment.accessToken = accessToken;
-          headers.authorization = accessToken;
-          httpResponse = await dio.post(url, data: formData);
-        }
-
-        if (httpResponse.statusCode == 201) {
-          productJsonFile.delete();
-          return true;
-        }
-      } on DioError catch (error, stackTrace) {
-        logger.e("HTTPAccessUtilites:post", error, stackTrace);
-        if (!ignoreError && error.response != null) {
-          HTTPErrorResponse errorResponse =
-              HTTPErrorResponse.fromJson(error.response!.data);
-          ErrorHandlingUtilities.instance.showPopUpError(
-            "${productInfo.name}:${productInfo.version}",
-            errors: errorResponse.message,
-          );
-        }
-      } catch (error, stackTrace) {
-        logger.e("HTTPAccessUtilites:post", error, stackTrace);
-        if (!ignoreError) {
-          ErrorHandlingUtilities.instance.showPopUpError(
-              "${productInfo.name}:${productInfo.version}\n$error");
-        }
-      } finally {
-        productJsonFile.delete();
+      if (httpResponse.statusCode == 401) {
+        final accessToken = await AuthService.getInstance().login(
+          clientID: environment.clientID,
+          clientSecret: environment.clientSecret,
+          serverURL: environment.serverURL,
+          username: environment.username,
+          password: environment.password,
+        );
+        environment.accessToken = accessToken;
+        headers.authorization = accessToken;
+        httpResponse = await dio.post(url, data: formData);
       }
+
+      logger.i({
+        "response_from": url,
+        "body": '$httpResponse',
+      });
+
+      if (httpResponse.statusCode == 201) {
+        productJsonFile.delete();
+        return true;
+      }
+    } on DioError catch (error, stackTrace) {
+      logger.e("ProductService:publish:DioError", error, stackTrace);
+      HTTPErrorResponse errorResponse =
+          HTTPErrorResponse.fromJson(error.response!.data);
+      ErrorHandlingUtilities.instance.showPopUpError(
+        "${productInfo.name}:${productInfo.version}\n${errorResponse.message}",
+        errors: errorResponse.errors,
+      );
     } catch (error, stackTrace) {
       logger.e("ProductService:publish", error, stackTrace);
-      ErrorHandlingUtilities.instance
-          .showPopUpError("${productInfo.name}:${productInfo.version}\n$error");
+      if (!ignoreError) {
+        ErrorHandlingUtilities.instance.showPopUpError(
+            "${productInfo.name}:${productInfo.version}\n$error");
+      }
+    } finally {
+      if (productJsonFile != null) {
+        productJsonFile.delete();
+      }
     }
 
     return false;

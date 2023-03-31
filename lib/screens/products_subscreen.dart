@@ -1,12 +1,15 @@
+import 'dart:ui';
+
 import 'package:dotted_border/dotted_border.dart';
 import 'package:fluent_ui/fluent_ui.dart';
-import 'package:ibm_apic_dt/screens/upload_products_screen.dart';
+import 'package:flutter/material.dart' as material;
 
+import './upload_products_screen.dart';
 import '../controllers/products_controller.dart';
+import '../global_configurations.dart';
 import '../models/environment.dart';
 import '../widgets/confirmation_pop_up.dart';
 import '../widgets/loader.dart';
-import '../global_configurations.dart';
 import '../widgets/responsive_text.dart';
 
 class ProductsSubScreen extends StatefulWidget {
@@ -16,6 +19,14 @@ class ProductsSubScreen extends StatefulWidget {
 
   @override
   State<ProductsSubScreen> createState() => _ProductsSubScreenState();
+}
+
+class _PublishConfirmation {
+  bool confirmAction;
+  bool migrateSubscribtions;
+  _PublishConfirmation()
+      : confirmAction = false,
+        migrateSubscribtions = true;
 }
 
 class _ProductsSubScreenState extends State<ProductsSubScreen> {
@@ -162,15 +173,21 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
           },
         ),
         const SizedBox(width: 10),
-        _buildButton(
-          icon: const Icon(FluentIcons.publish_content),
-          tooltipMessage: 'Publish selected products',
-          confirmationText: 'Do you want to publish the selected products?',
-          onConfirmedFunction: () async {
-            setState(() => _isPublishing = true);
-            await _productController.publishSelected();
-            setState(() => _isPublishing = false);
-          },
+        Tooltip(
+          message: "Publish selected products",
+          child: IconButton(
+              icon: const Icon(FluentIcons.publish_content),
+              onPressed: () async {
+                final confirmation = await openPublishConfirmationDialog(
+                  "Do you want to publish the selected products?",
+                );
+                if (confirmation != null && confirmation.confirmAction) {
+                  setState(() => _isPublishing = true);
+                  await _productController.publishSelected(
+                      migrateSubscriptions: confirmation.migrateSubscribtions);
+                  setState(() => _isPublishing = false);
+                }
+              }),
         ),
         const SizedBox(width: 10),
         Tooltip(
@@ -188,6 +205,63 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
       ],
     );
   }
+
+  Future<_PublishConfirmation?> openPublishConfirmationDialog(
+          String confirmationText) async =>
+      await showDialog<_PublishConfirmation>(
+        barrierDismissible: true,
+        context: context,
+        builder: (BuildContext context) {
+          _PublishConfirmation confirmation = _PublishConfirmation();
+          return BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+            child: material.AlertDialog(
+              shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(16))),
+              title: Text(confirmationText),
+              content: StatefulBuilder(
+                builder: (BuildContext context, StateSetter setState) {
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Checkbox(
+                        content: const Text('Migrate Subscriptions'),
+                        checked: confirmation.migrateSubscribtions,
+                        onChanged: (bool? value) => setState(
+                            () => confirmation.migrateSubscribtions = value!),
+                      ),
+                    ],
+                  );
+                },
+              ),
+              actionsAlignment: MainAxisAlignment.spaceEvenly,
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () {
+                    confirmation.confirmAction = true;
+                    Navigator.of(context).pop(confirmation);
+                  },
+                  child: const Text(
+                    'Yes',
+                    textScaleFactor: 1.5,
+                  ),
+                ),
+                TextButton(
+                  child: const Text(
+                    'No',
+                    textScaleFactor: 1.5,
+                  ),
+                  onPressed: () {
+                    confirmation.confirmAction = false;
+                    Navigator.of(context).pop(confirmation);
+                  },
+                ),
+              ],
+            ),
+          );
+        },
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -331,76 +405,86 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
                           ),
                           const SizedBox(height: 10),
                           Container(
-                              width: screenWidth,
-                              height: 450,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(15),
-                                color: Colors.black.withOpacity(0.2),
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 4, vertical: 8),
-                              child: _isPublishing
-                                  ? const Loader()
-                                  : ListView.builder(
-                                      itemCount: _productController
-                                          .productsInfos.length,
-                                      itemBuilder: (ctx, index) {
-                                        return ListTile(
-                                          tileColor:
-                                              ButtonState.all(Colors.grey),
-                                          leading: Checkbox(
-                                            onChanged: (isChecked) =>
-                                                setState(() {
-                                              _productController
-                                                      .productsInfos[index]
-                                                      .isSelected =
-                                                  isChecked ?? false;
-                                              _productController
-                                                      .productsSelected +=
-                                                  (isChecked ?? false) ? 1 : -1;
-                                            }),
-                                            checked: _productController
-                                                .productsInfos[index]
-                                                .isSelected,
-                                          ),
-                                          title: Text(
+                            width: screenWidth,
+                            height: 450,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(15),
+                              color: Colors.black.withOpacity(0.2),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 4, vertical: 8),
+                            child: _isPublishing
+                                ? const Loader()
+                                : ListView.builder(
+                                    itemCount:
+                                        _productController.productsInfos.length,
+                                    itemBuilder: (ctx, index) {
+                                      return ListTile(
+                                        tileColor: ButtonState.all(Colors.grey),
+                                        leading: Checkbox(
+                                          onChanged: (isChecked) =>
+                                              setState(() {
                                             _productController
-                                                .productsInfos[index].title,
-                                            textScaleFactor: 1,
-                                          ),
-                                          subtitle: Text(
+                                                    .productsInfos[index]
+                                                    .isSelected =
+                                                isChecked ?? false;
                                             _productController
-                                                .productsInfos[index].version,
-                                          ),
-                                          trailing: Row(
-                                            children: [
-                                              _buildButton(
-                                                icon: const Icon(
-                                                    FluentIcons.publish_content,
-                                                    size: 18),
-                                                tooltipMessage:
-                                                    "Publish Product",
-                                                confirmationText:
-                                                    "Do you want to publish ${_productController.productsInfos[index].name}:${_productController.productsInfos[index].version} to ${_productController.catalogs[_productController.catalogIndex].name}",
-                                                onConfirmedFunction: () async {
-                                                  setState(() =>
-                                                      _isPublishing = true);
-                                                  await _productController
-                                                      .publish(index);
-                                                  setState(() =>
-                                                      _isPublishing = false);
-                                                },
-                                              ),
-                                              const SizedBox(width: 10),
-                                              const Button(
-                                                onPressed: null,
-                                                child: Text("Subscribe"),
-                                              ),
-                                            ],
-                                          ),
-                                        );
-                                      },
-                                    )),
+                                                    .productsSelected +=
+                                                (isChecked ?? false) ? 1 : -1;
+                                          }),
+                                          checked: _productController
+                                              .productsInfos[index].isSelected,
+                                        ),
+                                        title: Text(
+                                          _productController
+                                              .productsInfos[index].title,
+                                          textScaleFactor: 1,
+                                        ),
+                                        subtitle: Text(
+                                          _productController
+                                              .productsInfos[index].version,
+                                        ),
+                                        trailing: Row(
+                                          children: [
+                                            Tooltip(
+                                              message: "Publish Product",
+                                              child: IconButton(
+                                                  icon: const Icon(
+                                                      FluentIcons
+                                                          .publish_content,
+                                                      size: 18),
+                                                  onPressed: () async {
+                                                    final confirmation =
+                                                        await openPublishConfirmationDialog(
+                                                      "Do you want to publish ${_productController.productsInfos[index].name}:${_productController.productsInfos[index].version} to ${_productController.catalogs[_productController.catalogIndex].name}",
+                                                    );
+                                                    if (confirmation != null &&
+                                                        confirmation
+                                                            .confirmAction) {
+                                                      setState(() =>
+                                                          _isPublishing = true);
+                                                      await _productController.publish(
+                                                          index,
+                                                          migrateSubscriptions:
+                                                              confirmation
+                                                                  .migrateSubscribtions);
+                                                      setState(() =>
+                                                          _isPublishing =
+                                                              false);
+                                                    }
+                                                  }),
+                                            ),
+                                            const SizedBox(width: 10),
+                                            const Button(
+                                              onPressed: null,
+                                              child: Text("Subscribe"),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                  ),
+                          ),
                         ],
                       )
               ],

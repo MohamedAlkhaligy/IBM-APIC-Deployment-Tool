@@ -111,7 +111,6 @@ class _UploadProductsScreenState extends State<UploadProductsScreen> {
                         type: FileType.custom,
                         allowedExtensions: ["yaml", "yml"],
                       );
-
                       bool areFilesLoaded = false;
                       if (result != null) {
                         setState(() => _isPublishing = true);
@@ -151,7 +150,6 @@ class _UploadProductsScreenState extends State<UploadProductsScreen> {
                             files.add(XFile(entity.path));
                           }
                         }
-
                         areFilesLoaded =
                             await widget._productController.loadProducts(files);
                         setState(() => _isPublishing = false);

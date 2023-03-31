@@ -87,17 +87,17 @@ class ProductController {
     return orgs.isNotEmpty && catalogs.isNotEmpty;
   }
 
-  Future<bool> publish(index) async {
+  Future<bool> publish(index, {bool migrateSubscriptions = true}) async {
     return await ProductService.getInstance().publish(
       _environment,
       orgs[_organizationIndex].name!,
       catalogs[_catalogIndex].name,
       _productsInfos[index],
-      queryParameters: "migrate_subscriptions=true",
+      queryParameters: migrateSubscriptions ? "migrate_subscriptions=true" : '',
     );
   }
 
-  Future<void> publishSelected() async {
+  Future<void> publishSelected({bool migrateSubscriptions = true}) async {
     if (_productsSelected == 0) {
       ErrorHandlingUtilities.instance
           .showPopUpError("Please select a product to publish!");
@@ -109,7 +109,8 @@ class ProductController {
             orgs[_organizationIndex].name!,
             catalogs[_catalogIndex].name,
             productInfos,
-            queryParameters: "migrate_subscriptions=true",
+            queryParameters:
+                migrateSubscriptions ? "migrate_subscriptions=true" : '',
           );
 
           if (!hasPublished) {
@@ -250,7 +251,6 @@ class ProductController {
           version: product.info.version,
         ),
       );
-      print(_productsInfos);
     } catch (error, traceStack) {
       GlobalConfigurations.logger.e(
         "ProductsSubScreen:addProduct:${productFile.path}",
