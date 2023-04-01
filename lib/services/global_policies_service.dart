@@ -94,12 +94,13 @@ class GlobalPoliciesService {
   }
 
   Future<bool> uploadGlobalPolicy(
-    String globalPolicyYamlString, {
+    String globalPolicyString, {
     required Environment environment,
     required String organizationName,
     required String catalogName,
     required String configuredGatewayName,
     ignoreUIError = false,
+    isJons = false,
   }) async {
     try {
       // await AuthService.getInstance().introspectAndLogin(environment);
@@ -107,7 +108,9 @@ class GlobalPoliciesService {
           '${environment.serverURL}/api/catalogs/$organizationName/$catalogName/configured-gateway-services/$configuredGatewayName/global-policies';
 
       final requestBody = {
-        "global_policy": loadYaml(globalPolicyYamlString),
+        "global_policy": isJons
+            ? json.decode(globalPolicyString)
+            : loadYaml(globalPolicyString),
       };
 
       HTTPHeaders headers = HTTPHeaders(
