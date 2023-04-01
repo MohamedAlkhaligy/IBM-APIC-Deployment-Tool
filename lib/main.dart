@@ -41,12 +41,14 @@ Future<void> loadConfigurations() async {
       output: FileOutput(file: logFile),
       printer: PrettyPrinter(
         printTime: true,
+        colors: false,
       ),
       filter: ProductionFilter(),
       level: Level.error,
     );
   } else {
-    GlobalConfigurations.logger = Logger();
+    GlobalConfigurations.logger =
+        Logger(printer: PrettyPrinter(printTime: true));
   }
 }
 
