@@ -235,7 +235,8 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
                   );
                 },
               ),
-              actionsAlignment: MainAxisAlignment.spaceEvenly,
+              actionsAlignment: MainAxisAlignment.end,
+              actionsPadding: const EdgeInsets.all(10),
               actions: <Widget>[
                 TextButton(
                   onPressed: () {
@@ -247,6 +248,7 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
                     textScaleFactor: 1.5,
                   ),
                 ),
+                const SizedBox(width: 25),
                 TextButton(
                   child: const Text(
                     'No',
@@ -474,11 +476,11 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
                                                     }
                                                   }),
                                             ),
-                                            const SizedBox(width: 10),
-                                            const Button(
-                                              onPressed: null,
-                                              child: Text("Subscribe"),
-                                            ),
+                                            // const SizedBox(width: 10),
+                                            // const Button(
+                                            //   onPressed: null,
+                                            //   child: Text("Subscribe"),
+                                            // ),
                                           ],
                                         ),
                                       );
