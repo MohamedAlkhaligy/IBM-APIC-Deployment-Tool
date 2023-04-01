@@ -1,9 +1,13 @@
+import 'dart:convert';
+
 import '../global_configurations.dart';
 import '../models/catalogs/catalog.dart';
 import '../models/environment.dart';
 import '../models/gateways/configured_gateway.dart';
+import '../models/global_policies/global_policy.dart';
 import '../models/global_policies/global_policy_meta.dart';
 import '../models/organizations/organization.dart';
+import '../models/products/openapi.dart';
 import '../services/catalogs_service.dart';
 import '../services/configured_gateway_service.dart';
 import '../services/global_policies_service.dart';
@@ -62,6 +66,38 @@ class GlobalPoliciesController {
             globalPolicies[globalPolicyIndex].globalPolicyMeta.name,
         globalPolicyVersion:
             globalPolicies[globalPolicyIndex].globalPolicyMeta.version!);
+  }
+
+  Future<bool> updateGlobalPolicy(
+      int globalPolicyIndex, bool isCatchesOnly, OpenAPI openAPI) async {
+    final globalPolicyName =
+        globalPolicies[globalPolicyIndex].globalPolicyMeta.name;
+    final globalPolicyVersion =
+        globalPolicies[globalPolicyIndex].globalPolicyMeta.version!;
+    GlobalPolicy globalPolicy = GlobalPolicy(
+        globalPolicy: "1.0.0",
+        info: Info(
+          name: globalPolicyName,
+          title: globalPolicies[globalPolicyIndex].globalPolicyMeta.title,
+          version: globalPolicyVersion,
+        ),
+        gateways: ["datapower-api-gateway"],
+        assembly: Assembly(
+          executeList: isCatchesOnly
+              ? null
+              : openAPI.ibmConfiguration.assembly.executeList ?? [],
+          catchList: openAPI.ibmConfiguration.assembly.catchList ?? [],
+        ));
+    return await GlobalPoliciesService.getInstance().updateGlobalPolicy(
+      json.encode(globalPolicy),
+      environment: _environment,
+      organizationName: orgs[organizationIndex].name!,
+      catalogName: catalogs[catalogIndex].name,
+      configuredGatewayName: configuredGateways[configuredGatewayIndex].name,
+      globalPolicyName: globalPolicyName,
+      globalPolicyVersion: globalPolicyVersion,
+      isJons: true,
+    );
   }
 
   Future<bool> deleteGlobalPolicy(int globalPolicyIndex) async {

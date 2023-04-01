@@ -159,6 +159,74 @@ class GlobalPoliciesService {
     return false;
   }
 
+  Future<bool> updateGlobalPolicy(
+    String globalPolicyString, {
+    required Environment environment,
+    required String organizationName,
+    required String catalogName,
+    required String configuredGatewayName,
+    required String globalPolicyName,
+    required String globalPolicyVersion,
+    ignoreUIError = false,
+    isJons = false,
+  }) async {
+    try {
+      // await AuthService.getInstance().introspectAndLogin(environment);
+      String url =
+          '${environment.serverURL}/api/catalogs/$organizationName/$catalogName/configured-gateway-services/$configuredGatewayName/global-policies/$globalPolicyName/$globalPolicyVersion';
+
+      final requestBody = {
+        "global_policy": isJons
+            ? json.decode(globalPolicyString)
+            : loadYaml(globalPolicyString),
+      };
+
+      HTTPHeaders headers = HTTPHeaders(
+        accept: 'application/json',
+        contentType: 'application/json',
+        authorization: environment.accessToken,
+      );
+
+      var httpResponse = await HTTPUtilites.getInstance().patch(
+        url,
+        jsonEncode(requestBody),
+        headers.typedJson,
+        ignoreUIError: ignoreUIError,
+        ignoreReauthError: true,
+      );
+
+      if (httpResponse != null && httpResponse.statusCode == 401) {
+        final accessToken = await AuthService.getInstance().login(
+          clientID: environment.clientID,
+          clientSecret: environment.clientSecret,
+          serverURL: environment.serverURL,
+          username: environment.username,
+          password: environment.password,
+        );
+        environment.accessToken = accessToken;
+        headers.authorization = accessToken;
+        httpResponse = await HTTPUtilites.getInstance().patch(
+          url,
+          jsonEncode(requestBody),
+          headers.typedJson,
+          ignoreUIError: ignoreUIError,
+        );
+      }
+
+      if (httpResponse != null) {
+        if (httpResponse.statusCode == 200) {
+          return true;
+        } else {
+          ErrorHandlingUtilities.instance.showPopUpError(httpResponse.body);
+        }
+      }
+    } catch (error) {
+      logger.e("GlobalPoliciesService:updateGlobalPolicy", error);
+      ErrorHandlingUtilities.instance.showPopUpError(error.toString());
+    }
+    return false;
+  }
+
   Future<String> getGlobalPolicyYAML({
     required Environment environment,
     required String organizationName,

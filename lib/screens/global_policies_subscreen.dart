@@ -4,8 +4,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:path/path.dart';
 
-import '../controllers/global_policies_controller.dart';
 import './upload_global_policy_screen.dart';
+import '../controllers/global_policies_controller.dart';
 import '../global_configurations.dart';
 import '../models/environment.dart';
 import '../navigation_service.dart';
@@ -14,6 +14,7 @@ import '../widgets/confirmation_pop_up.dart';
 import '../widgets/loader.dart';
 import '../widgets/responsive_text.dart';
 import '../widgets/yaml_viewer.dart';
+import './update_global_policy_from_api_screen.dart';
 
 class GlobalPoliciesSubScreen extends StatefulWidget {
   final Environment environment;
@@ -369,10 +370,29 @@ class _GlobalPoliciesSubScreenState extends State<GlobalPoliciesSubScreen> {
                             ),
                             const SizedBox(width: 10),
                             Tooltip(
-                              message: "Edit Global Policy",
+                              message: "Update assembly of the global policy",
                               child: IconButton(
                                 icon: const Icon(FluentIcons.page_edit),
-                                onPressed: () {},
+                                onPressed: () async {
+                                  final isUpdated = await showDialog<bool>(
+                                        barrierDismissible: true,
+                                        context: context,
+                                        builder: (ctx) {
+                                          return Center(
+                                            child: SizedBox(
+                                              width: screenWidth * 0.5,
+                                              child:
+                                                  UpdateGlobalPolicyFromAPIScreen(
+                                                _globalPoliciesController,
+                                                index,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ) ??
+                                      false;
+                                  if (isUpdated) _refreshData();
+                                },
                               ),
                             ),
                             const SizedBox(width: 10),
