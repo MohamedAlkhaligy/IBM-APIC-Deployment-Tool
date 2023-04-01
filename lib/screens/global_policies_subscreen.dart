@@ -225,23 +225,30 @@ class _GlobalPoliciesSubScreenState extends State<GlobalPoliciesSubScreen> {
                                   barrierDismissible: true,
                                   context: context,
                                   builder: (ctx) {
-                                    return UploadGlobalPolicyScreen(
-                                      environment: widget.environment,
-                                      organizationName:
-                                          _globalPoliciesController
-                                              .orgs[_globalPoliciesController
-                                                  .organizationIndex]
-                                              .name!,
-                                      catalogName: _globalPoliciesController
-                                          .catalogs[_globalPoliciesController
-                                              .catalogIndex]
-                                          .name,
-                                      configuredGatewayName:
-                                          _globalPoliciesController
-                                              .configuredGateways[
+                                    return Center(
+                                      child: SizedBox(
+                                        width: screenWidth * 0.5,
+                                        child: UploadGlobalPolicyScreen(
+                                          environment: widget.environment,
+                                          organizationName:
+                                              _globalPoliciesController
+                                                  .orgs[
+                                                      _globalPoliciesController
+                                                          .organizationIndex]
+                                                  .name!,
+                                          catalogName: _globalPoliciesController
+                                              .catalogs[
                                                   _globalPoliciesController
-                                                      .configuredGatewayIndex]
+                                                      .catalogIndex]
                                               .name,
+                                          configuredGatewayName:
+                                              _globalPoliciesController
+                                                  .configuredGateways[
+                                                      _globalPoliciesController
+                                                          .configuredGatewayIndex]
+                                                  .name,
+                                        ),
+                                      ),
                                     );
                                   },
                                 ) ??
@@ -281,7 +288,7 @@ class _GlobalPoliciesSubScreenState extends State<GlobalPoliciesSubScreen> {
                         title: Text(_globalPoliciesController
                                 .globalPolicies[index].globalPolicyMeta.title ??
                             ""),
-                        subtitle: Text(
+                        subtitle: SelectableText(
                             "${_globalPoliciesController.globalPolicies[index].globalPolicyMeta.name}:${_globalPoliciesController.globalPolicies[index].globalPolicyMeta.version}"),
                         trailing: Row(
                           children: [
