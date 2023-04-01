@@ -18,7 +18,6 @@ import './navigation_service.dart';
 import './providers/environments_provider.dart';
 import './screens/home_screen.dart';
 import './utilities/routing_utilities.dart';
-import 'file_ouput.dart' as output;
 
 void createAppDirectories(String appDocumentDirectoryPath) {
   String hivePath = "$appDocumentDirectoryPath\\hive";
@@ -34,18 +33,20 @@ Future<void> loadConfigurations() async {
   GlobalConfigurations.appDocumentDirectoryPath =
       "${(await getApplicationDocumentsDirectory()).path}\\IBM API Connect Deployment Tool";
   createAppDirectories(GlobalConfigurations.appDocumentDirectoryPath);
-  if (kDebugMode) {
-    GlobalConfigurations.logger = Logger();
-  } else {
+  if (kReleaseMode) {
+    File logFile = await File(
+            "${GlobalConfigurations.appDocumentDirectoryPath}\\logs\\log.txt")
+        .create(recursive: true);
     GlobalConfigurations.logger = Logger(
-      output: output.FileOutput(
-        File("${GlobalConfigurations.appDocumentDirectoryPath}\\logs\\log.txt"),
-      ),
+      output: FileOutput(file: logFile),
       printer: PrettyPrinter(
         printTime: true,
       ),
+      filter: ProductionFilter(),
       level: Level.error,
     );
+  } else {
+    GlobalConfigurations.logger = Logger();
   }
 }
 
