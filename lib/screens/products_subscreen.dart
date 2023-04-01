@@ -189,14 +189,14 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
                 }
               }),
         ),
-        const SizedBox(width: 10),
-        Tooltip(
-          message: "Subscribe selected products",
-          child: IconButton(
-            icon: Image.asset("assets/icons/subscription-64.png", width: 16),
-            onPressed: null,
-          ),
-        ),
+        // const SizedBox(width: 10),
+        // Tooltip(
+        //   message: "Subscribe selected products",
+        //   child: IconButton(
+        //     icon: Image.asset("assets/icons/subscription-64.png", width: 16),
+        //     onPressed: null,
+        //   ),
+        // ),
         const SizedBox(width: 10),
         IconButton(
           icon: const Icon(FluentIcons.refresh),

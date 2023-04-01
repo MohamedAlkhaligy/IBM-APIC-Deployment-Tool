@@ -78,6 +78,54 @@ class HTTPUtilites {
     return response;
   }
 
+  Future<Response?> patch(
+    String url,
+    String body,
+    Map<String, String> foldedHeaders, {
+    bool ignoreUIError = false,
+    bool ignoreReauthError = false,
+  }) async {
+    Response? response;
+
+    logger.i({
+      "url": url,
+      "headers": foldedHeaders,
+      "body": body,
+    });
+
+    try {
+      var client = Client();
+
+      Response httpResponse = await client.patch(
+        Uri.parse(url),
+        headers: foldedHeaders,
+        body: body,
+      );
+
+      if (httpResponse.statusCode != 200 && httpResponse.statusCode != 201) {
+        if (!ignoreUIError) {
+          await handleError(
+            httpResponse,
+            ignoreReauthError: ignoreReauthError,
+          );
+        }
+      }
+      response = httpResponse;
+      logger.i({
+        "response_from": url,
+        "headers": response.headers,
+        "body": httpResponse.body
+      });
+      client.close();
+    } catch (error, stackTrace) {
+      logger.e("HTTPAccessUtilites:patch", error, stackTrace);
+      ErrorHandlingUtilities.instance.showPopUpError(
+        error.toString(),
+      );
+    }
+    return response;
+  }
+
   Future<Response?> get(
     String url,
     Map<String, String> foldedHeaders, {
