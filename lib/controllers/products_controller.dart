@@ -92,7 +92,7 @@ class ProductController {
       _environment,
       orgs[_organizationIndex].name!,
       catalogs[_catalogIndex].name,
-      _productsInfos[index],
+      productsInfos[index],
       queryParameters: migrateSubscriptions ? "migrate_subscriptions=true" : '',
     );
   }
@@ -102,7 +102,7 @@ class ProductController {
       ErrorHandlingUtilities.instance
           .showPopUpError("Please select a product to publish!");
     } else {
-      for (final productInfos in _productsInfos) {
+      for (final productInfos in productsInfos) {
         if (productInfos.isSelected) {
           final hasPublished = await ProductService.getInstance().publish(
             _environment,
