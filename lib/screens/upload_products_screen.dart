@@ -110,6 +110,7 @@ class _UploadProductsScreenState extends State<UploadProductsScreen> {
                         allowMultiple: true,
                         type: FileType.custom,
                         allowedExtensions: ["yaml", "yml"],
+                        lockParentWindow: true,
                       );
                       bool areFilesLoaded = false;
                       if (result != null) {
@@ -138,7 +139,9 @@ class _UploadProductsScreenState extends State<UploadProductsScreen> {
                     child: const Text('Pick Folder'),
                     onPressed: () async {
                       final dirPath =
-                          await FilePicker.platform.getDirectoryPath();
+                          await FilePicker.platform.getDirectoryPath(
+                        lockParentWindow: true,
+                      );
                       List<XFile> files = [];
                       bool areFilesLoaded = false;
                       if (dirPath != null) {

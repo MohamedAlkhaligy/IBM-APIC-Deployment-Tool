@@ -151,6 +151,7 @@ class _UploadGlobalPolicyScreenState extends State<UploadGlobalPolicyScreen>
               final result = await FilePicker.platform.pickFiles(
                 type: FileType.custom,
                 allowedExtensions: ["yaml", "yml"],
+                lockParentWindow: true,
               );
               if (result != null) {
                 String globalPolicyYAML =
@@ -172,6 +173,13 @@ class _UploadGlobalPolicyScreenState extends State<UploadGlobalPolicyScreen>
         ],
       ),
     );
+  }
+
+  bool areFieldsFilled() {
+    return nameController.text.isNotEmpty &&
+        versionController.text.isNotEmpty &&
+        titleController.text.isNotEmpty &&
+        globalPolicyVersionController.text.isNotEmpty;
   }
 
   Future<void> loadOpenAPIFile(String openAPIFilePath) async {
@@ -206,6 +214,11 @@ class _UploadGlobalPolicyScreenState extends State<UploadGlobalPolicyScreen>
   }
 
   Future<void> publishGlobalPolicy() async {
+    if (!areFieldsFilled()) {
+      ErrorHandlingUtilities.instance
+          .showPopUpError("Please fill in all fields!");
+      return;
+    }
     GlobalPolicy globalPolicy = GlobalPolicy(
         globalPolicy: globalPolicyVersionController.text,
         info: Info(
@@ -359,6 +372,7 @@ class _UploadGlobalPolicyScreenState extends State<UploadGlobalPolicyScreen>
                         await FilePicker.platform.pickFiles(
                       type: FileType.custom,
                       allowedExtensions: ["yaml", "yml"],
+                      lockParentWindow: true,
                     );
                     if (filePickerResult != null) {
                       await loadOpenAPIFile(

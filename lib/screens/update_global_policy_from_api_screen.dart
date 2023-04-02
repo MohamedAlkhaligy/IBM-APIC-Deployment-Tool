@@ -142,6 +142,7 @@ class _UpdateGlobalPolicyFromAPIScreenFromAPIState
               final filePickerResult = await FilePicker.platform.pickFiles(
                 type: FileType.custom,
                 allowedExtensions: ["yaml", "yml"],
+                lockParentWindow: true,
               );
               if (filePickerResult != null) {
                 await updateGlobalPolicy(widget._globalPolicyIndex,
