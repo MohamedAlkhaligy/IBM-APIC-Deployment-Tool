@@ -1,11 +1,9 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:ibm_apic_dt/controllers/global_policies_controller.dart';
-import 'package:yaml/yaml.dart';
 
 import '../global_configurations.dart';
 import '../models/products/openapi.dart';
@@ -33,10 +31,7 @@ class _UpdateGlobalPolicyFromAPIScreenFromAPIState
       int globalPolicyIndex, String openAPIFilePath) async {
     try {
       final openAPIFile = File(openAPIFilePath);
-      final openAPIAsString = await openAPIFile.readAsString();
-      final openAPIAsYaml = loadYaml(openAPIAsString);
-      final openAPIAsJson = jsonDecode(json.encode(openAPIAsYaml));
-      final openAPI = OpenAPI.fromJson(openAPIAsJson);
+      final openAPI = await OpenAPI.loadOpenAPI(openAPIFile);
       if (context.mounted) {
         final globalPolicyMeta = widget._globalPoliciesController
             .globalPolicies[globalPolicyIndex].globalPolicyMeta;
@@ -101,7 +96,7 @@ class _UpdateGlobalPolicyFromAPIScreenFromAPIState
                         detail.files.first.path)) {
                       ErrorHandlingUtilities.instance.showPopUpError(
                           "Please, upload single file at a time!");
-                    } else if (!RegExp("^.*.(yaml|yml)\$")
+                    } else if (!RegExp("^.*.(yaml|yml|json)\$")
                         .hasMatch(detail.files.first.name.toLowerCase())) {
                       ErrorHandlingUtilities.instance
                           .showPopUpError("Only yaml files are supported!");
@@ -141,7 +136,7 @@ class _UpdateGlobalPolicyFromAPIScreenFromAPIState
             onPressed: () async {
               final filePickerResult = await FilePicker.platform.pickFiles(
                 type: FileType.custom,
-                allowedExtensions: ["yaml", "yml"],
+                allowedExtensions: ["yaml", "yml", "json"],
                 lockParentWindow: true,
               );
               if (filePickerResult != null) {

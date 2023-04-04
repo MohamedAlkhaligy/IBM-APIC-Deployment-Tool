@@ -57,7 +57,7 @@ class GlobalPoliciesController {
   int get configuredGatewayIndex => _configuredGatewayIndex;
 
   Future<String> getGlobalPolicy(int globalPolicyIndex) async {
-    return await await GlobalPoliciesService.getInstance().getGlobalPolicyYAML(
+    return await GlobalPoliciesService.getInstance().getGlobalPolicyYAML(
         environment: _environment,
         organizationName: orgs[_organizationIndex].name!,
         catalogName: catalogs[_catalogIndex].name,

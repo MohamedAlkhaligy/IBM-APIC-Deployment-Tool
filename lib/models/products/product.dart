@@ -1,4 +1,8 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:json_annotation/json_annotation.dart';
+import 'package:yaml/yaml.dart';
 
 part 'product.g.dart';
 
@@ -34,6 +38,20 @@ class Product {
   factory Product.fromJson(Map<String, dynamic> json) =>
       _$ProductFromJson(json);
   Map<String, dynamic> toJson() => _$ProductToJson(this);
+
+  static Future<Product> loadFromFile(File file) async {
+    var productAsString = await file.readAsString();
+    if (RegExp("^.*.(yaml|yml)\$").hasMatch(file.path.toLowerCase())) {
+      final productAsYaml = loadYaml(productAsString);
+      productAsString = json.encode(productAsYaml);
+    }
+    final productAsJson = jsonDecode(productAsString);
+    return Product.fromJson(productAsJson);
+  }
+
+  static bool isExtensionSupported(String filename) {
+    return RegExp("^.*.(yaml|yml|json)\$").hasMatch(filename.toLowerCase());
+  }
 }
 
 @JsonSerializable()

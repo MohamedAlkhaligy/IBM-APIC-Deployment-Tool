@@ -109,7 +109,7 @@ class _UploadProductsScreenState extends State<UploadProductsScreen> {
                           await FilePicker.platform.pickFiles(
                         allowMultiple: true,
                         type: FileType.custom,
-                        allowedExtensions: ["yaml", "yml"],
+                        allowedExtensions: ["yaml", "yml", "json"],
                         lockParentWindow: true,
                       );
                       bool areFilesLoaded = false;

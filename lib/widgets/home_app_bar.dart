@@ -25,7 +25,7 @@ class HomeAppBar extends StatelessWidget {
             children: [
               IconButton(
                 icon: const Icon(
-                  Github.github_circled,
+                  Github.githubCircled,
                   size: 20,
                 ),
                 onPressed: () async => await launchUrl(Uri.parse(

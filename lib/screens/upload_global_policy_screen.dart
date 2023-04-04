@@ -5,7 +5,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:ibm_apic_dt/models/global_policies/global_policy.dart';
-import 'package:yaml/yaml.dart';
 
 import '../global_configurations.dart';
 import '../models/environment.dart';
@@ -96,22 +95,23 @@ class _UploadGlobalPolicyScreenState extends State<UploadGlobalPolicyScreen>
                           detail.files.first.path)) {
                         ErrorHandlingUtilities.instance.showPopUpError(
                             "Please, upload single file at a time!");
-                      } else if (!RegExp("^.*.(yaml|yml)\$")
+                      } else if (!RegExp("^.*.(yaml|yml|json)\$")
                           .hasMatch(detail.files.first.name.toLowerCase())) {
                         ErrorHandlingUtilities.instance
                             .showPopUpError("Only yaml files are supported!");
                       } else {
-                        String globalPolicyYAML =
+                        String globalPolicyAsString =
                             await File(detail.files.first.path).readAsString();
                         bool isUploaded =
                             await GlobalPoliciesService.getInstance()
-                                .uploadGlobalPolicy(
-                          globalPolicyYAML,
-                          environment: widget.environment,
-                          organizationName: widget.organizationName,
-                          catalogName: widget.catalogName,
-                          configuredGatewayName: widget.configuredGatewayName,
-                        );
+                                .uploadGlobalPolicy(globalPolicyAsString,
+                                    environment: widget.environment,
+                                    organizationName: widget.organizationName,
+                                    catalogName: widget.catalogName,
+                                    configuredGatewayName:
+                                        widget.configuredGatewayName,
+                                    isJson: RegExp("^.*.(json)\$").hasMatch(
+                                        detail.files.first.name.toLowerCase()));
                         if (context.mounted) {
                           Navigator.of(context).pop(isUploaded);
                         }
@@ -150,7 +150,7 @@ class _UploadGlobalPolicyScreenState extends State<UploadGlobalPolicyScreen>
             onPressed: () async {
               final result = await FilePicker.platform.pickFiles(
                 type: FileType.custom,
-                allowedExtensions: ["yaml", "yml"],
+                allowedExtensions: ["yaml", "yml", "json"],
                 lockParentWindow: true,
               );
               if (result != null) {
@@ -185,10 +185,7 @@ class _UploadGlobalPolicyScreenState extends State<UploadGlobalPolicyScreen>
   Future<void> loadOpenAPIFile(String openAPIFilePath) async {
     try {
       openAPIFile = File(openAPIFilePath);
-      final openAPIAsString = await openAPIFile.readAsString();
-      final openAPIAsYaml = loadYaml(openAPIAsString);
-      final openAPIAsJson = jsonDecode(json.encode(openAPIAsYaml));
-      openAPI = OpenAPI.fromJson(openAPIAsJson);
+      openAPI = await OpenAPI.loadOpenAPI(openAPIFile);
 
       if (nameController.text.isEmpty) {
         nameController.text = openAPI.info.name;
@@ -240,7 +237,7 @@ class _UploadGlobalPolicyScreenState extends State<UploadGlobalPolicyScreen>
       organizationName: widget.organizationName,
       catalogName: widget.catalogName,
       configuredGatewayName: widget.configuredGatewayName,
-      isJons: true,
+      isJson: true,
     );
     if (context.mounted) {
       Navigator.of(context).pop(isUploaded);
@@ -308,7 +305,7 @@ class _UploadGlobalPolicyScreenState extends State<UploadGlobalPolicyScreen>
                               detail.files.first.path)) {
                             ErrorHandlingUtilities.instance.showPopUpError(
                                 "Please, upload single file at a time!");
-                          } else if (!RegExp("^.*.(yaml|yml)\$").hasMatch(
+                          } else if (!OpenAPI.isExtensionSupported(
                               detail.files.first.name.toLowerCase())) {
                             ErrorHandlingUtilities.instance.showPopUpError(
                                 "Only yaml files are supported!");
@@ -371,7 +368,7 @@ class _UploadGlobalPolicyScreenState extends State<UploadGlobalPolicyScreen>
                     final filePickerResult =
                         await FilePicker.platform.pickFiles(
                       type: FileType.custom,
-                      allowedExtensions: ["yaml", "yml"],
+                      allowedExtensions: ["yaml", "yml", "json"],
                       lockParentWindow: true,
                     );
                     if (filePickerResult != null) {

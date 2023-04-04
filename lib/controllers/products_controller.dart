@@ -1,9 +1,7 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:cross_file/cross_file.dart';
 import 'package:path/path.dart' as path;
-import 'package:yaml/yaml.dart';
 
 import '../errors/openapi_type_not_supported.dart';
 import '../errors/path_not_file_exception.dart';
@@ -12,6 +10,7 @@ import '../models/catalogs/catalog.dart';
 import '../models/environment.dart';
 import '../models/organizations/organization.dart';
 import '../models/products/openapi.dart';
+import '../models/products/product.dart';
 import '../models/products/product_info.dart';
 import '../services/catalogs_service.dart';
 import '../services/organization_service.dart';
@@ -182,8 +181,7 @@ class ProductController {
           await ErrorHandlingUtilities.instance
               .showPopUpError("Drag product files only!");
           return false;
-        } else if (RegExp("^.*.(yaml|yml)\$")
-            .hasMatch(file.name.toLowerCase())) {
+        } else if (Product.isExtensionSupported(file.name)) {
           // Publish product
           await _addProduct(file, ignoreError: ignoreError);
         }
@@ -213,8 +211,7 @@ class ProductController {
   }) async {
     try {
       // Parse file to product
-      final product =
-          await ProductService.getInstance().loadProduct(productFile.path);
+      final product = await Product.loadFromFile(File(productFile.path));
 
       // Only check if the apis exist
       for (final entry in product.apis.entries) {
@@ -227,8 +224,7 @@ class ProductController {
         }
 
         String openAPIFilename = path.basename(openAPIPath);
-        if (!RegExp("^.*.(yaml|yml)\$")
-            .hasMatch(openAPIFilename.toLowerCase())) {
+        if (!OpenAPI.isExtensionSupported(openAPIFilename)) {
           throw OpenAPITypeNotSupported(
               "One or more oh the API paths provided in the ${product.info.name}:${product.info.version} are not yaml-based");
         }
@@ -236,10 +232,7 @@ class ProductController {
         // This is to check if the yaml file contains api info object giving
         // higher chance that this is an api file. The actaul validation is done
         // from the api management server when the product is published
-        final openAPIAsString = await File(openAPIPath).readAsString();
-        final openAPIAsYaml = loadYaml(openAPIAsString);
-        final openAPIAsJson = jsonDecode(json.encode(openAPIAsYaml));
-        OpenAPI.fromJson(openAPIAsJson);
+        await OpenAPI.loadOpenAPI(File(openAPIPath));
       }
 
       // Validation Done

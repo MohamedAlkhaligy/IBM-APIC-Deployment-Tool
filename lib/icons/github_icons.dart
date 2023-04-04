@@ -11,7 +11,7 @@
 ///      fonts:
 ///       - asset: fonts/Github.ttf
 ///
-/// 
+///
 /// * Font Awesome 4, Copyright (C) 2016 by Dave Gandy
 ///         Author:    Dave Gandy
 ///         License:   SIL ()
@@ -25,5 +25,6 @@ class Github {
   static const _kFontFam = 'Github';
   static const String? _kFontPkg = null;
 
-  static const IconData github_circled = IconData(0xf09b, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData githubCircled =
+      IconData(0xf09b, fontFamily: _kFontFam, fontPackage: _kFontPkg);
 }

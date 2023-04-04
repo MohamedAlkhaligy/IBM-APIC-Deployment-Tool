@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:uuid/uuid.dart';
-import 'package:yaml/yaml.dart';
 import 'package:path/path.dart' as path;
 
 import '../errors/openapi_type_not_supported.dart';
@@ -31,13 +30,6 @@ class ProductService {
     return _productService;
   }
 
-  Future<Product> loadProduct(String filePath) async {
-    final productAsString = await File(filePath).readAsString();
-    final productAsYaml = loadYaml(productAsString);
-    final productAsJson = jsonDecode(json.encode(productAsYaml));
-    return Product.fromJson(productAsJson);
-  }
-
   Future<List<OpenAPIInfo>> loadProductAPIsInfo(
       Product product, String productFilePath) async {
     List<OpenAPIInfo> openAPIInfos = [];
@@ -53,16 +45,12 @@ class ProductService {
       }
 
       String openAPIFilename = path.basename(openAPIPath);
-      if (!RegExp("^.*.(yaml|yml)\$").hasMatch(openAPIFilename.toLowerCase())) {
+      if (!OpenAPI.isExtensionSupported(openAPIFilename)) {
         throw OpenAPITypeNotSupported(
             "One or more oh the API paths provided in the ${product.info.name}:${product.info.version} are not yaml-based");
       }
 
-      final openAPIAsString = await File(openAPIPath).readAsString();
-      final openAPIAsYaml = loadYaml(openAPIAsString);
-      final openAPIAsJson = jsonDecode(json.encode(openAPIAsYaml));
-      final openAPI = OpenAPI.fromJson(openAPIAsJson);
-
+      final openAPI = await OpenAPI.loadOpenAPI(File(openAPIPath));
       openAPIInfos.add(
         OpenAPIInfo(
           path: openAPIPath,
@@ -114,7 +102,7 @@ class ProductService {
       productJsonFile = await File(
               "${GlobalConfigurations.appDocumentDirectoryPath}\\temp\\$productFilename")
           .create();
-      final product = await loadProduct(productInfo.filePath);
+      final product = await Product.loadFromFile(File(productInfo.filePath));
       final openAPIsInfos =
           await loadProductAPIsInfo(product, productInfo.filePath);
       final productAdaptor = loadProductAdaptor(product, openAPIsInfos);

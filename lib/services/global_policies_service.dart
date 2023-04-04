@@ -100,7 +100,7 @@ class GlobalPoliciesService {
     required String catalogName,
     required String configuredGatewayName,
     ignoreUIError = false,
-    isJons = false,
+    isJson = false,
   }) async {
     try {
       // await AuthService.getInstance().introspectAndLogin(environment);
@@ -108,7 +108,7 @@ class GlobalPoliciesService {
           '${environment.serverURL}/api/catalogs/$organizationName/$catalogName/configured-gateway-services/$configuredGatewayName/global-policies';
 
       final requestBody = {
-        "global_policy": isJons
+        "global_policy": isJson
             ? json.decode(globalPolicyString)
             : loadYaml(globalPolicyString),
       };
