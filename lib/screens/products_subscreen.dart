@@ -95,13 +95,9 @@ class _ProductsSubScreenState extends State<ProductsSubScreen> {
   }
 
   void _applyChange(ChangeType changeType) async {
-    setState(() {
-      _isLoading = true;
-    });
-    await _productController.applyChange(ChangeType.catalog);
-    setState(() {
-      _isLoading = false;
-    });
+    setState(() => _isLoading = true);
+    await _productController.applyChange(changeType);
+    setState(() => _isLoading = false);
   }
 
   List<ComboBoxItem<int>> _buildOrgsMenu() {
