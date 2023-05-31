@@ -108,72 +108,87 @@ class ProductService {
       final productAdaptor = loadProductAdaptor(product, openAPIsInfos);
       await productJsonFile.writeAsString(json.encode(productAdaptor.toJson()));
 
-      final List<MapEntry<String, MultipartFile>> files = [];
-      files.add(
-        MapEntry(
-          "product",
-          MultipartFile.fromFileSync(
-            productJsonFile.path,
-            filename: productFilename,
-            contentType: MediaType.parse('application/json'),
-          ),
-        ),
-      );
-      for (final api in openAPIsInfos) {
-        files.add(
-          MapEntry(
-            "openapi",
-            MultipartFile.fromFileSync(
-              api.path,
-              filename: api.filename,
-              contentType: MediaType.parse('application/yaml'),
-            ),
-          ),
-        );
-      }
-
-      final formData = FormData();
-      formData.files.addAll(files);
+      var formData = FormData();
+      formData.files.addAll(
+          getFormDataFiles(productJsonFile, productFilename, openAPIsInfos));
 
       logger.i({
         "url": url,
         "headers": headers.typedJson,
       });
 
-      final dio = Dio(BaseOptions(headers: headers.typedJson));
-      Response httpResponse;
-      httpResponse = await dio.post(url, data: formData);
+      final dio = Dio(BaseOptions(
+        receiveTimeout: const Duration(seconds: 20),
+      ));
 
-      if (httpResponse.statusCode == 401) {
-        final accessToken = await AuthService.getInstance().login(
-          clientID: environment.clientID,
-          clientSecret: environment.clientSecret,
-          serverURL: environment.serverURL,
-          username: environment.username,
-          password: environment.password,
-        );
-        environment.accessToken = accessToken;
-        headers.authorization = accessToken;
-        httpResponse = await dio.post(url, data: formData);
+      Response? httpResponse;
+      try {
+        httpResponse = await dio.post(url,
+            data: formData,
+            options: Options(
+              headers: headers.typedJson,
+            ));
+
+        logger.i({"response_from": url, "body": '$httpResponse'});
+      } on DioError catch (error, stackTrace) {
+        if (error.type == DioErrorType.badResponse) {
+          if (error.response!.statusCode == 401) {
+            final accessToken = await AuthService.getInstance().login(
+              clientID: environment.clientID,
+              clientSecret: environment.clientSecret,
+              serverURL: environment.serverURL,
+              username: environment.username,
+              password: environment.password,
+            );
+            environment.accessToken = accessToken;
+            headers.authorization = accessToken;
+            formData = FormData();
+            formData.files.addAll(getFormDataFiles(
+                productJsonFile, productFilename, openAPIsInfos));
+            httpResponse = await dio.post(url,
+                data: formData,
+                options: Options(
+                  headers: headers.typedJson,
+                ));
+          } else {
+            logger.e("ProductService:publish:DioError", error, stackTrace);
+            if (!ignoreError) {
+              HTTPErrorResponse errorResponse =
+                  HTTPErrorResponse.fromJson(error.response!.data);
+              ErrorHandlingUtilities.instance.showPopUpError(
+                "${productInfo.name}:${productInfo.version}\n${errorResponse.message}",
+                errors: errorResponse.errors,
+              );
+            }
+          }
+        } else {
+          logger.e("ProductService:publish:DioError", error, stackTrace);
+          if (!ignoreError) {
+            ErrorHandlingUtilities.instance.showPopUpError(
+                "${productInfo.name}:${productInfo.version}\n$error");
+          }
+        }
       }
 
-      logger.i({
-        "response_from": url,
-        "body": '$httpResponse',
-      });
-
-      if (httpResponse.statusCode == 201) {
+      if (httpResponse != null && httpResponse.statusCode == 201) {
         productJsonFile.delete();
         return true;
       }
     } on DioError catch (error, stackTrace) {
       logger.e("ProductService:publish:DioError", error, stackTrace);
-      HTTPErrorResponse errorResponse =
-          HTTPErrorResponse.fromJson(error.response!.data);
-      ErrorHandlingUtilities.instance.showPopUpError(
-        "${productInfo.name}:${productInfo.version}\n${errorResponse.message}",
-        errors: errorResponse.errors,
-      );
+      if (!ignoreError) {
+        if (error.type == DioErrorType.badResponse) {
+          HTTPErrorResponse errorResponse =
+              HTTPErrorResponse.fromJson(error.response!.data);
+          ErrorHandlingUtilities.instance.showPopUpError(
+            "${productInfo.name}:${productInfo.version}\n${errorResponse.message}",
+            errors: errorResponse.errors,
+          );
+        } else {
+          ErrorHandlingUtilities.instance.showPopUpError(
+              "${productInfo.name}:${productInfo.version}\n$error");
+        }
+      }
     } catch (error, stackTrace) {
       logger.e("ProductService:publish", error, stackTrace);
       if (!ignoreError) {
@@ -185,7 +200,34 @@ class ProductService {
         productJsonFile.delete();
       }
     }
-
     return false;
+  }
+
+  List<MapEntry<String, MultipartFile>> getFormDataFiles(File productJsonFile,
+      String productFilename, List<OpenAPIInfo> openAPIsInfos) {
+    final List<MapEntry<String, MultipartFile>> files = [];
+    files.add(
+      MapEntry(
+        "product",
+        MultipartFile.fromFileSync(
+          productJsonFile.path,
+          filename: productFilename,
+          contentType: MediaType.parse('application/json'),
+        ),
+      ),
+    );
+    for (final api in openAPIsInfos) {
+      files.add(
+        MapEntry(
+          "openapi",
+          MultipartFile.fromFileSync(
+            api.path,
+            filename: api.filename,
+            contentType: MediaType.parse('application/yaml'),
+          ),
+        ),
+      );
+    }
+    return files;
   }
 }
