@@ -4,13 +4,13 @@ import 'package:cross_file/cross_file.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:fluent_ui/fluent_ui.dart';
-import 'package:ibm_apic_dt/controllers/products_controller.dart';
+import 'package:ibm_apic_dt/controllers/products_publish_controller.dart';
 import 'package:ibm_apic_dt/widgets/loader.dart';
 
 class UploadProductsScreen extends StatefulWidget {
-  final ProductController _productController;
+  final ProductsPublishController _productsPublishController;
 
-  const UploadProductsScreen(this._productController, {super.key});
+  const UploadProductsScreen(this._productsPublishController, {super.key});
 
   @override
   State<UploadProductsScreen> createState() => _UploadProductsScreenState();
@@ -64,7 +64,8 @@ class _UploadProductsScreenState extends State<UploadProductsScreen> {
                       onDragDone: (detail) async {
                         setState(() => _isPublishing = true);
                         bool ignoreError = detail.files.length != 1;
-                        bool areFilesLoaded = await widget._productController
+                        bool areFilesLoaded = await widget
+                            ._productsPublishController
                             .loadProducts(detail.files,
                                 ignoreError: ignoreError);
                         if (context.mounted) {
@@ -115,8 +116,8 @@ class _UploadProductsScreenState extends State<UploadProductsScreen> {
                       bool areFilesLoaded = false;
                       if (result != null) {
                         setState(() => _isPublishing = true);
-                        areFilesLoaded =
-                            await widget._productController.loadProducts(
+                        areFilesLoaded = await widget._productsPublishController
+                            .loadProducts(
                           result.files
                               .map((file) => XFile(file.path!))
                               .toList(),
@@ -153,11 +154,10 @@ class _UploadProductsScreenState extends State<UploadProductsScreen> {
                             files.add(XFile(entity.path));
                           }
                         }
-                        areFilesLoaded =
-                            await widget._productController.loadProducts(files);
+                        areFilesLoaded = await widget._productsPublishController
+                            .loadProducts(files);
                         setState(() => _isPublishing = false);
                       }
-
                       if (context.mounted) {
                         Navigator.of(context).pop(areFilesLoaded);
                       }
