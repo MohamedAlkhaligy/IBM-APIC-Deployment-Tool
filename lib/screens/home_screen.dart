@@ -52,6 +52,8 @@ class _HomeScreenState extends State<HomeScreen> {
       case SortType.recent:
         environments.sort((a, b) => b.lastVisited.compareTo(a.lastVisited));
         break;
+      case SortType.none:
+        break;
     }
   }
 

@@ -1,5 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 
+import '../../dtos/common/visibility_dto.dart';
 import './product.dart';
 
 part 'product_adaptor.g.dart';
@@ -19,7 +20,7 @@ class ProductAdaptor {
   final Map<String, ApiAdaptor> apis;
 
   @JsonKey(name: 'visibility')
-  final Visibility visibility;
+  final VisibilityDto visibility;
 
   @JsonKey(name: 'product')
   final String productVersion;

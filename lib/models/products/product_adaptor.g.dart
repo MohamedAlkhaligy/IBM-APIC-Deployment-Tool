@@ -18,7 +18,7 @@ ProductAdaptor _$ProductAdaptorFromJson(Map<String, dynamic> json) =>
         (k, e) => MapEntry(k, ApiAdaptor.fromJson(e as Map<String, dynamic>)),
       ),
       visibility:
-          Visibility.fromJson(json['visibility'] as Map<String, dynamic>),
+          VisibilityDto.fromJson(json['visibility'] as Map<String, dynamic>),
       productVersion: json['product'] as String,
     );
 
