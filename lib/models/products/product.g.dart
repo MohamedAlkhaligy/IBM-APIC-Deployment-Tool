@@ -17,7 +17,7 @@ Product _$ProductFromJson(Map<String, dynamic> json) => Product(
         (k, e) => MapEntry(k, Api.fromJson(e as Map<String, dynamic>)),
       ),
       visibility:
-          Visibility.fromJson(json['visibility'] as Map<String, dynamic>),
+          VisibilityDto.fromJson(json['visibility'] as Map<String, dynamic>),
       productVersion: json['product'] as String,
     );
 
@@ -142,47 +142,4 @@ Api _$ApiFromJson(Map<String, dynamic> json) => Api(
 
 Map<String, dynamic> _$ApiToJson(Api instance) => <String, dynamic>{
       r'$ref': instance.ref,
-    };
-
-Visibility _$VisibilityFromJson(Map<String, dynamic> json) => Visibility(
-      view: View.fromJson(json['view'] as Map<String, dynamic>),
-      subscribe: Subscribe.fromJson(json['subscribe'] as Map<String, dynamic>),
-    );
-
-Map<String, dynamic> _$VisibilityToJson(Visibility instance) =>
-    <String, dynamic>{
-      'view': instance.view,
-      'subscribe': instance.subscribe,
-    };
-
-View _$ViewFromJson(Map<String, dynamic> json) => View(
-      type: json['type'] as String,
-      orgs: (json['orgs'] as List<dynamic>).map((e) => e as String).toList(),
-      tags:
-          (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ??
-              [],
-      enabled: json['enabled'] as bool,
-    );
-
-Map<String, dynamic> _$ViewToJson(View instance) => <String, dynamic>{
-      'type': instance.type,
-      'orgs': instance.orgs,
-      'tags': instance.tags,
-      'enabled': instance.enabled,
-    };
-
-Subscribe _$SubscribeFromJson(Map<String, dynamic> json) => Subscribe(
-      type: json['type'] as String,
-      orgs: (json['orgs'] as List<dynamic>).map((e) => e as String).toList(),
-      tags:
-          (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ??
-              [],
-      enabled: json['enabled'] as bool,
-    );
-
-Map<String, dynamic> _$SubscribeToJson(Subscribe instance) => <String, dynamic>{
-      'type': instance.type,
-      'orgs': instance.orgs,
-      'tags': instance.tags,
-      'enabled': instance.enabled,
     };

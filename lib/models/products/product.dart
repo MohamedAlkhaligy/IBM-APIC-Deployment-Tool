@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:yaml/yaml.dart';
 
+import '../../dtos/common/visibility_dto.dart';
+
 part 'product.g.dart';
 
 @JsonSerializable()
@@ -21,7 +23,7 @@ class Product {
   final Map<String, Api> apis;
 
   @JsonKey(name: 'visibility')
-  final Visibility visibility;
+  final VisibilityDto visibility;
 
   @JsonKey(name: 'product')
   final String productVersion;
@@ -160,57 +162,4 @@ class Api {
 
   factory Api.fromJson(Map<String, dynamic> json) => _$ApiFromJson(json);
   Map<String, dynamic> toJson() => _$ApiToJson(this);
-}
-
-@JsonSerializable()
-class Visibility {
-  final View view;
-  final Subscribe subscribe;
-
-  Visibility({required this.view, required this.subscribe});
-
-  factory Visibility.fromJson(Map<String, dynamic> json) =>
-      _$VisibilityFromJson(json);
-  Map<String, dynamic> toJson() => _$VisibilityToJson(this);
-}
-
-@JsonSerializable()
-class View {
-  final String type;
-  final List<String> orgs;
-
-  @JsonKey(name: 'tags', defaultValue: [])
-  final List<String> tags;
-  final bool enabled;
-
-  View({
-    required this.type,
-    required this.orgs,
-    required this.tags,
-    required this.enabled,
-  });
-
-  factory View.fromJson(Map<String, dynamic> json) => _$ViewFromJson(json);
-  Map<String, dynamic> toJson() => _$ViewToJson(this);
-}
-
-@JsonSerializable()
-class Subscribe {
-  final String type;
-  final List<String> orgs;
-
-  @JsonKey(name: 'tags', defaultValue: [])
-  final List<String> tags;
-  final bool enabled;
-
-  Subscribe({
-    required this.type,
-    required this.orgs,
-    required this.tags,
-    required this.enabled,
-  });
-
-  factory Subscribe.fromJson(Map<String, dynamic> json) =>
-      _$SubscribeFromJson(json);
-  Map<String, dynamic> toJson() => _$SubscribeToJson(this);
 }
