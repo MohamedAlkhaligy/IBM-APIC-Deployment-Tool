@@ -240,7 +240,8 @@ class _ProductsManageScreenState extends State<ProductsManageScreen> {
                           String lastUpdatedAt =
                               timeago.format(DateTime.now().subtract(diff));
                           return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 2),
                             child: Expander(
                               headerHeight: 55,
                               header: ListTile(
