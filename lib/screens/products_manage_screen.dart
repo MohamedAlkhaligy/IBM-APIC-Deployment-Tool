@@ -235,115 +235,120 @@ class _ProductsManageScreenState extends State<ProductsManageScreen> {
                         itemBuilder: (ctx, productIndex) {
                           final product =
                               _productsManageController.products[productIndex];
-                          int planIndex = 0;
                           Duration diff = DateTime.now()
                               .difference(DateTime.parse(product.updatedAt));
                           String lastUpdatedAt =
                               timeago.format(DateTime.now().subtract(diff));
-                          return Expander(
-                            headerHeight: 55,
-                            header: ListTile(
-                              leading: Checkbox(
-                                onChanged: (isChecked) => setState(() {
-                                  product.isSelected = isChecked ?? false;
-                                  _productsManageController.productsSelected +=
-                                      (isChecked ?? false) ? 1 : -1;
-                                }),
-                                checked: product.isSelected,
-                              ),
-                              tileColor: ButtonState.all(
-                                  Colors.black.withOpacity(0.4)),
-                              title: Text(product.title),
-                              subtitle: SelectableText(
-                                  "${product.name}:${product.version} - ${product.state} - ${max(product.plans.length - 1, 0)} Plans - $lastUpdatedAt"),
-                              trailing: Row(
-                                children: [
-                                  // Tooltip(
-                                  //   message: "View Product",
-                                  //   child: IconButton(
-                                  //     icon: const Icon(FluentIcons.view),
-                                  //     onPressed: () async {},
-                                  //   ),
-                                  // ),
-                                  // const SizedBox(width: 10),
-                                  // Tooltip(
-                                  //   message: "Download Product",
-                                  //   child: IconButton(
-                                  //     icon: const Icon(FluentIcons.download),
-                                  //     onPressed: () async {},
-                                  //   ),
-                                  // ),
-                                  // const SizedBox(width: 10),
-                                  // Tooltip(
-                                  //   message: "Delete Product",
-                                  //   child: IconButton(
-                                  //     icon: const Icon(FluentIcons.delete),
-                                  //     onPressed: () async {
-                                  //       final isConfirmed =
-                                  //           await showDialog<bool>(
-                                  //                 barrierDismissible: true,
-                                  //                 context: context,
-                                  //                 builder: (ctx) {
-                                  //                   return const Text("");
-                                  //                 },
-                                  //               ) ??
-                                  //               false;
-                                  //       if (isConfirmed) {
-                                  //         setState(() => _isLoading = false);
-                                  //       }
-                                  //     },
-                                  //   ),
-                                  // ),
-                                ],
-                              ),
-                            ),
-                            content: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: Expander(
+                              headerHeight: 55,
+                              header: ListTile(
+                                leading: Checkbox(
+                                  onChanged: (isChecked) => setState(() {
+                                    product.isSelected = isChecked ?? false;
+                                    _productsManageController
+                                            .productsSelected +=
+                                        (isChecked ?? false) ? 1 : -1;
+                                  }),
+                                  checked: product.isSelected,
+                                ),
+                                tileColor: ButtonState.all(
+                                    Colors.black.withOpacity(0.4)),
+                                title: Text(product.title),
+                                subtitle: SelectableText(
+                                    "${product.name}:${product.version} - ${product.state} - ${max(product.plans.length - 1, 0)} Plans - $lastUpdatedAt"),
+                                trailing: Row(
                                   children: [
-                                    const Text("APIs per Plan: "),
-                                    ComboBox<String>(
-                                      value: product.selectedPlan,
-                                      items: product.plans.entries
-                                          .map((entry) => ComboBoxItem<String>(
-                                                value: entry.key,
-                                                child: Text(entry.value.title),
-                                              ))
-                                          .toList(),
-                                      onChanged: (planName) {
-                                        if (planName != null) {
-                                          setState(() =>
-                                              product.selectedPlan = planName);
-                                        }
-                                      },
-                                    ),
+                                    // Tooltip(
+                                    //   message: "View Product",
+                                    //   child: IconButton(
+                                    //     icon: const Icon(FluentIcons.view),
+                                    //     onPressed: () async {},
+                                    //   ),
+                                    // ),
+                                    // const SizedBox(width: 10),
+                                    // Tooltip(
+                                    //   message: "Download Product",
+                                    //   child: IconButton(
+                                    //     icon: const Icon(FluentIcons.download),
+                                    //     onPressed: () async {},
+                                    //   ),
+                                    // ),
+                                    // const SizedBox(width: 10),
+                                    // Tooltip(
+                                    //   message: "Delete Product",
+                                    //   child: IconButton(
+                                    //     icon: const Icon(FluentIcons.delete),
+                                    //     onPressed: () async {
+                                    //       final isConfirmed =
+                                    //           await showDialog<bool>(
+                                    //                 barrierDismissible: true,
+                                    //                 context: context,
+                                    //                 builder: (ctx) {
+                                    //                   return const Text("");
+                                    //                 },
+                                    //               ) ??
+                                    //               false;
+                                    //       if (isConfirmed) {
+                                    //         setState(() => _isLoading = false);
+                                    //       }
+                                    //     },
+                                    //   ),
+                                    // ),
                                   ],
                                 ),
-                                const SizedBox(height: 10),
-                                SizedBox(
-                                  height: 150,
-                                  child: ListView.builder(
-                                    itemCount: product
-                                        .plans[product.selectedPlan]!
-                                        .apis
-                                        .length,
-                                    itemBuilder: (ctx, apiIndex) {
-                                      final api = product
-                                          .plans[product.selectedPlan]!
-                                          .apis[apiIndex];
-                                      return ListTile(
-                                        tileColor: ButtonState.all(
-                                            Colors.black.withOpacity(0.4)),
-                                        title: Text(api.title),
-                                        subtitle: SelectableText(
-                                          "${api.name}:${api.version}",
-                                        ),
-                                      );
-                                    },
+                              ),
+                              content: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Text("APIs per Plan: "),
+                                      ComboBox<String>(
+                                        value: product.selectedPlan,
+                                        items: product.plans.entries
+                                            .map((entry) =>
+                                                ComboBoxItem<String>(
+                                                  value: entry.key,
+                                                  child:
+                                                      Text(entry.value.title),
+                                                ))
+                                            .toList(),
+                                        onChanged: (planName) {
+                                          if (planName != null) {
+                                            setState(() => product
+                                                .selectedPlan = planName);
+                                          }
+                                        },
+                                      ),
+                                    ],
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(height: 10),
+                                  SizedBox(
+                                    height: 150,
+                                    child: ListView.builder(
+                                      itemCount: product
+                                          .plans[product.selectedPlan]!
+                                          .apis
+                                          .length,
+                                      itemBuilder: (ctx, apiIndex) {
+                                        final api = product
+                                            .plans[product.selectedPlan]!
+                                            .apis[apiIndex];
+                                        return ListTile(
+                                          tileColor: ButtonState.all(
+                                              Colors.black.withOpacity(0.4)),
+                                          title: Text(api.title),
+                                          subtitle: SelectableText(
+                                            "${api.name}:${api.version}",
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           );
                         },
