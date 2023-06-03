@@ -2,11 +2,11 @@ import 'dart:convert';
 
 import 'package:yaml/yaml.dart';
 
+import '../dtos/global_policies/list_global_policies/response/list_global_policies_response_dto.dart';
 import '../global_configurations.dart';
 import './auth_service.dart';
 import '../models/environment.dart';
 import '../models/global_policies/global_policy_meta.dart';
-import '../models/global_policies/list_global_policies_response_body.dart';
 import '../models/http_headers.dart';
 import '../utilities/error_handling_utilities.dart';
 import '../utilities/http_utilities.dart';
@@ -82,7 +82,7 @@ class GlobalPoliciesService {
       if (httpResponse != null && httpResponse.statusCode == 200) {
         final jsonResponseBody = json.decode(httpResponse.body);
         final listCatalogsResponseBody =
-            ListGlobalPoliciesResponseBody.fromJson(jsonResponseBody);
+            ListGlobalPoliciesResponseDto.fromJson(jsonResponseBody);
         globalPolicies = listCatalogsResponseBody.result;
         logger.i("GlobalPoliciesService:listGlobalPolicies");
       }
@@ -234,6 +234,7 @@ class GlobalPoliciesService {
     required String configuredGatewayName,
     required String globalPolicyName,
     required String globalPolicyVersion,
+    ContentType contentType = ContentType.yaml,
     ignoreUIError = false,
   }) async {
     try {
@@ -243,7 +244,7 @@ class GlobalPoliciesService {
           '${environment.serverURL}/api/catalogs/$organizationName/$catalogName/configured-gateway-services/$configuredGatewayName/global-policies/$globalPolicyName/$globalPolicyVersion?fields=add(global_policy)&fields=global_policy';
 
       HTTPHeaders headers = HTTPHeaders(
-        accept: 'application/yaml',
+        accept: GlobalConfigurations.getContentTypeString(contentType),
         authorization: environment.accessToken,
       );
 
