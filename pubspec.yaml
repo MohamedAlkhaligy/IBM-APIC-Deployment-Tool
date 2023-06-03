@@ -50,6 +50,8 @@ dependencies:
   json_annotation: ^4.7.0 # Serialize and Deserialize Json
   yaml: ^3.1.1
   flutter_syntax_view: ^4.0.0
+  flutter_code_editor: ^0.2.15
+  highlight: ^0.7.0
 
   # Save data locally
   hive_flutter: ^1.1.0
@@ -68,6 +70,9 @@ dependencies:
   cross_file: ^0.3.3+4
 
   url_launcher: ^6.1.10
+
+  # A library useful for creating fuzzy timestamps. (e.g. "15 minutes ago")
+  timeago: ^3.3.0
 
 dev_dependencies:
   flutter_test:
