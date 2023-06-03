@@ -3,15 +3,19 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:http_parser/http_parser.dart';
+import 'package:ibm_apic_dt/utilities/http_utilities.dart';
 import 'package:uuid/uuid.dart';
 import 'package:path/path.dart' as path;
 
+import '../dtos/products/list_products/response/list_products_response_dto.dart';
 import '../errors/openapi_type_not_supported.dart';
 import '../errors/path_not_file_exception.dart';
 import '../models/products/openapi.dart';
 import '../models/products/openapi_info.dart';
 import '../models/products/product.dart';
 import '../models/products/product_adaptor.dart';
+import '../models/products/product_manage_meta.dart';
+import '../models/products/products_page.dart';
 import './auth_service.dart';
 import '../global_configurations.dart';
 import '../models/environment.dart';
@@ -229,5 +233,66 @@ class ProductService {
       );
     }
     return files;
+  }
+
+  Future<ProductsPage> listProducts(
+    Environment environment,
+    String organizationName,
+    String catalogName, {
+    String queryParameters = "",
+    ignoreUIError = false,
+  }) async {
+    ProductsPage productPage =
+        ProductsPage(totalCatalogProducts: 0, currentProductsSubset: []);
+    try {
+      String url =
+          '${environment.serverURL}/api/catalogs/$organizationName/$catalogName/products?$queryParameters';
+
+      HTTPHeaders headers = HTTPHeaders(
+        accept: 'application/json',
+        authorization: environment.accessToken,
+      );
+
+      var httpResponse = await HTTPUtilites.getInstance().get(
+        url,
+        headers.typedJson,
+        ignoreUIError: ignoreUIError,
+        ignoreReauthError: true,
+      );
+
+      if (httpResponse != null && httpResponse.statusCode == 401) {
+        final accessToken = await AuthService.getInstance().login(
+          clientID: environment.clientID,
+          clientSecret: environment.clientSecret,
+          serverURL: environment.serverURL,
+          username: environment.username,
+          password: environment.password,
+        );
+        environment.accessToken = accessToken;
+        headers.authorization = accessToken;
+        httpResponse = await HTTPUtilites.getInstance().get(
+          url,
+          headers.typedJson,
+          ignoreUIError: ignoreUIError,
+        );
+      }
+
+      if (httpResponse != null && httpResponse.statusCode == 200) {
+        final jsonResponseBody = json.decode(httpResponse.body);
+        final listProductsResponseDto =
+            ListProductsResponseDto.fromJson(jsonResponseBody);
+        productPage = ProductsPage(
+          totalCatalogProducts: listProductsResponseDto.totalResults,
+          currentProductsSubset:
+              listProductsResponseDto.convertToProductManageMeta(),
+        );
+        logger.i("ProductService:listProducts");
+      }
+    } catch (error, stackTrace) {
+      logger.e("ProductService:listProducts", error, stackTrace);
+      ErrorHandlingUtilities.instance.showPopUpError(error.toString());
+    }
+
+    return productPage;
   }
 }
