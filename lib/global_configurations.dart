@@ -6,7 +6,9 @@ enum Realm { admin, provider }
 
 enum ChangeType { organization, catalog, configuredGateway, mediaType }
 
-enum SortType { ascending, created, descending, recent }
+enum ContentType { yaml, json }
+
+enum SortType { none, ascending, created, descending, recent }
 
 class GlobalConfigurations {
   static Map<String, Color> fluentUISwatch = <String, Color>{
@@ -18,6 +20,15 @@ class GlobalConfigurations {
     'lighter': SystemTheme.accentColor.lighter,
     'lightest': SystemTheme.accentColor.lightest,
   };
+
+  static String getContentTypeString(ContentType type) {
+    switch (type) {
+      case ContentType.yaml:
+        return "application/yaml";
+      case ContentType.json:
+        return "application/json";
+    }
+  }
 
   static String appDocumentDirectoryPath = "";
 
