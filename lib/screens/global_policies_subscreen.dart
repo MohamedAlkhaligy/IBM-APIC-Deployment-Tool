@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
@@ -161,7 +162,12 @@ class _GlobalPoliciesSubScreenState extends State<GlobalPoliciesSubScreen> {
             false;
       }
       if (isConfirmed) {
-        file.writeAsString(code);
+        List<String> lines = const LineSplitter()
+            .convert(code)
+            .sublist(1)
+            .map((line) => line.substring(2))
+            .toList();
+        file.writeAsString(lines.join('\n'));
       }
     }
   }
