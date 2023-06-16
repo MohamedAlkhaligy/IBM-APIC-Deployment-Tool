@@ -1,8 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
+import '../global_configurations.dart';
 import '../models/environments.dart';
 import '../models/environment.dart';
+import '../screens/environment_screen.dart';
+import '../screens/home_navigator_screen.dart';
 
 // ignore: constant_identifier_names
 const ENVIRONMENTS = "environments";
@@ -38,6 +41,9 @@ class EnvironmentsProvider with ChangeNotifier {
         _environmentsBox.get(ENVIRONMENTS) ?? Environments([]);
     environments.environments.add(environment);
     _environmentsBox.put(ENVIRONMENTS, environments);
+    if (GlobalConfigurations.appType == AppType.singlePageApp) {
+      HomeNavigatorScreen.pages.add(EnvironmentScreen(environment));
+    }
     notifyListeners();
   }
 

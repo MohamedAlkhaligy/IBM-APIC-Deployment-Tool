@@ -1,6 +1,8 @@
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:ibm_apic_dt/global_configurations.dart';
 import 'package:intl/intl.dart';
 
+import '../screens/home_navigator_screen.dart';
 import './confirmation_pop_up.dart';
 import './responsive_text.dart';
 import '../models/environment.dart';
@@ -30,9 +32,18 @@ class _EnvironmentBlockState extends State<EnvironmentBlock> {
       child: GestureDetector(
         onTap: () {
           widget._environmentsProvider.visitEnvironment(widget._environment);
-          Navigator.of(context).pushReplacementNamed(
-              EnvironmentScreen.routeName,
-              arguments: widget._environment);
+          if (GlobalConfigurations.appType == AppType.singlePageApp) {
+            HomeNavigatorScreen.pageController.jumpToPage(
+              HomeNavigatorScreen.pages.indexWhere((pageWidget) =>
+                  pageWidget is EnvironmentScreen &&
+                  pageWidget.environment.environmentID ==
+                      widget._environment.environmentID),
+            );
+          } else {
+            Navigator.of(context).pushReplacementNamed(
+                EnvironmentScreen.routeName,
+                arguments: widget._environment);
+          }
         },
         child: Container(
             decoration: BoxDecoration(

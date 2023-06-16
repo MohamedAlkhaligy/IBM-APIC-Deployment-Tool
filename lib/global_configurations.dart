@@ -10,6 +10,8 @@ enum ContentType { yaml, json }
 
 enum SortType { none, ascending, created, descending, recent }
 
+enum AppType { singlePageApp, mutliPageApp }
+
 class GlobalConfigurations {
   static Map<String, Color> fluentUISwatch = <String, Color>{
     'darkest': SystemTheme.accentColor.darkest,
@@ -33,6 +35,8 @@ class GlobalConfigurations {
   static String appDocumentDirectoryPath = "";
 
   static late Logger logger;
+
+  static AppType appType = AppType.singlePageApp;
 
   static const String debugginProxyURL = "https://localhost:2000";
 }

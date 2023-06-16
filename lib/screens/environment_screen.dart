@@ -15,9 +15,13 @@ class EnvironmentScreen extends StatefulWidget {
   State<EnvironmentScreen> createState() => _EnvironmentScreenState();
 }
 
-class _EnvironmentScreenState extends State<EnvironmentScreen> {
+class _EnvironmentScreenState extends State<EnvironmentScreen>
+    with AutomaticKeepAliveClientMixin {
   int _currentIndex = 0;
   late final List<Tab> _tabs;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -38,6 +42,7 @@ class _EnvironmentScreenState extends State<EnvironmentScreen> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return ScaffoldPage(
       padding: EdgeInsets.zero,
       header: HomeAppBar(

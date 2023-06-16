@@ -1,4 +1,5 @@
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:ibm_apic_dt/screens/home_navigator_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 
@@ -87,7 +88,12 @@ class _AddEnvironmentScreenState extends State<AddEnvironmentScreen> {
         if (mounted) {
           Provider.of<EnvironmentsProvider>(context, listen: false)
               .addEnvironment(environment);
-          Navigator.of(context).pushReplacementNamed(HomeScreen.routeName);
+          if (GlobalConfigurations.appType == AppType.singlePageApp) {
+            setState(() => HomeNavigatorScreen.pageController
+                .jumpToPage(HomeNavigatorScreen.viewEnvironmentsPageIndex));
+          } else {
+            Navigator.of(context).pushReplacementNamed(HomeScreen.routeName);
+          }
         }
         logger.i("AuthScreen:Login");
       } else {

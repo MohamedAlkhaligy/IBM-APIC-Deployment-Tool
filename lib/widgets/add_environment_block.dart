@@ -1,7 +1,9 @@
 import 'package:dotted_border/dotted_border.dart';
 import 'package:fluent_ui/fluent_ui.dart';
+import '../global_configurations.dart';
 
 import '../screens/add_environment_screen.dart';
+import '../screens/home_navigator_screen.dart';
 
 class AddEnvironmentBlock extends StatefulWidget {
   const AddEnvironmentBlock({super.key});
@@ -20,8 +22,15 @@ class _AddEnvironmentBlockState extends State<AddEnvironmentBlock> {
       onExit: (event) => setState(() => color = Colors.white),
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
-        onTap: () => Navigator.of(context)
-            .pushReplacementNamed(AddEnvironmentScreen.routeName),
+        onTap: () {
+          if (GlobalConfigurations.appType == AppType.singlePageApp) {
+            setState(() => HomeNavigatorScreen.pageController
+                .jumpToPage(HomeNavigatorScreen.addEnvironmentPageIndex));
+          } else {
+            Navigator.of(context)
+                .pushReplacementNamed(AddEnvironmentScreen.routeName);
+          }
+        },
         child: DottedBorder(
           color: color,
           radius: const Radius.circular(15),
