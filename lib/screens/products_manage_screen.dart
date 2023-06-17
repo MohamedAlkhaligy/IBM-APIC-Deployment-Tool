@@ -109,9 +109,16 @@ class _ProductsManageScreenState extends State<ProductsManageScreen> {
     setState(() => _isLoading = false);
   }
 
-  Future<void> _changePageNumber(int pageNUmber) async {
+  Future<void> _changePageNumber(int pageNumber) async {
     setState(() => _isLoading = true);
-    await _productsManageController.changePageNumber(pageNUmber);
+    await _productsManageController.changePageNumber(pageNumber);
+    sortType = SortType.none;
+    setState(() => _isLoading = false);
+  }
+
+  Future<void> _changeRetrievalType(RetrievalType retrievalType) async {
+    setState(() => _isLoading = true);
+    await _productsManageController.changeRetrievalType(retrievalType);
     sortType = SortType.none;
     setState(() => _isLoading = false);
   }
@@ -181,9 +188,9 @@ class _ProductsManageScreenState extends State<ProductsManageScreen> {
                         const SizedBox(width: 10),
                         Expanded(
                           child: TextBox(
-                            enabled: false,
-                            placeholder:
-                                "Searching & Sorting will be available by next update!",
+                            enabled: true,
+                            // placeholder:
+                            // "Searching & Sorting will be available by next update!",
                             controller: _searchController,
                             onChanged: (value) {
                               _productsManageController.searchProduct(value);
@@ -210,14 +217,32 @@ class _ProductsManageScreenState extends State<ProductsManageScreen> {
                           ],
                           icon: const Icon(FluentIcons.sort),
                           iconSize: 15,
-                          // onChanged: ((value) {
-                          //   setState(() {
-                          //     sortType = value!;
-                          //     _productsManageController.sort(sortType);
-                          //   });
-                          // }),
+                          onChanged: ((value) {
+                            setState(() {
+                              sortType = value!;
+                              _productsManageController.sort(sortType);
+                            });
+                          }),
                           value: sortType,
                         ),
+                        const SizedBox(width: 10),
+                        ComboBox<RetrievalType>(
+                          items: const [
+                            ComboBoxItem(
+                              value: RetrievalType.pages,
+                              child: Text("Retrieve by page"),
+                            ),
+                            ComboBoxItem(
+                              value: RetrievalType.all,
+                              child: Text("Retrieve all"),
+                            ),
+                          ],
+                          iconSize: 15,
+                          onChanged: ((value) async {
+                            await _changeRetrievalType(value!);
+                          }),
+                          value: _productsManageController.retrievalType,
+                        )
                       ],
                     ),
                     const SizedBox(height: 10),
@@ -356,7 +381,9 @@ class _ProductsManageScreenState extends State<ProductsManageScreen> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    if (_productsManageController.products.isNotEmpty)
+                    if (_productsManageController.products.isNotEmpty &&
+                        _productsManageController.retrievalType ==
+                            RetrievalType.pages)
                       Container(
                         width: screenWidth,
                         height: 35,

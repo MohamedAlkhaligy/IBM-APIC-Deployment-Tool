@@ -10,6 +10,10 @@ enum ContentType { yaml, json }
 
 enum SortType { none, ascending, created, descending, recent }
 
+enum RetrievalType { pages, all }
+
+enum AppType { singlePageApp, mutliPageApp }
+
 class GlobalConfigurations {
   static Map<String, Color> fluentUISwatch = <String, Color>{
     'darkest': SystemTheme.accentColor.darkest,

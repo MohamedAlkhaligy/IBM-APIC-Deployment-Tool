@@ -18,6 +18,8 @@ class ProductsManageController {
       _limit,
       _totalCatalogProducts;
 
+  RetrievalType _retrievalType;
+
   List<Organization> orgs;
   List<Catalog> catalogs;
   List<ProductManageMeta> _products;
@@ -30,6 +32,7 @@ class ProductsManageController {
         _offset = 0,
         _limit = 10,
         _totalCatalogProducts = 0,
+        _retrievalType = RetrievalType.pages,
         orgs = [],
         catalogs = [],
         _products = [],
@@ -50,6 +53,8 @@ class ProductsManageController {
   int get limit => _limit;
 
   int get offset => _offset;
+
+  RetrievalType get retrievalType => _retrievalType;
 
   int get totalCatalogProducts => _totalCatalogProducts;
 
@@ -88,25 +93,39 @@ class ProductsManageController {
   /// Change the number of products per page,
   /// where [limit] is the number of products per page
   Future<void> changeLimit(int limit) async {
+    if (limit == _limit) return;
     _limit = limit;
     await _loadProducts(
         orgs[organizationIndex].name!, catalogs[catalogIndex].name);
   }
 
   Future<void> changePageNumber(int pageNumber) async {
-    _offset = (pageNumber - 1) * _limit;
+    int newOffset = (pageNumber - 1) * _limit;
+    if (_offset == newOffset) return;
+    _offset = newOffset;
+    await _loadProducts(
+        orgs[organizationIndex].name!, catalogs[catalogIndex].name);
+  }
+
+  Future<void> changeRetrievalType(RetrievalType retrievalType) async {
+    if (_retrievalType == retrievalType) return;
+    _retrievalType = retrievalType;
     await _loadProducts(
         orgs[organizationIndex].name!, catalogs[catalogIndex].name);
   }
 
   Future<void> _loadProducts(
       String organizationName, String catalogName) async {
+    String queryParamters =
+        "fields=name,title,version,state,updated_at,plans,apis&expand=apis";
+    if (_retrievalType == RetrievalType.pages) {
+      queryParamters += "&limit=$_limit&offset=$_offset";
+    }
     final productPage = await ProductService.getInstance().listProducts(
       _environment,
       organizationName,
       catalogName,
-      queryParameters:
-          "fields=name,title,version,state,updated_at,plans,apis&expand=apis&limit=$_limit&offset=$_offset",
+      queryParameters: queryParamters,
     );
     _totalCatalogProducts = productPage.totalCatalogProducts;
     _products = productPage.currentProductsSubset;
