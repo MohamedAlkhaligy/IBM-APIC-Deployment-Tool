@@ -5,6 +5,7 @@ import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:ibm_apic_dt/screens/environment_screen.dart';
+import 'package:intl/intl.dart';
 import 'package:logger/logger.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
@@ -36,7 +37,7 @@ Future<void> loadConfigurations() async {
   createAppDirectories(GlobalConfigurations.appDocumentDirectoryPath);
   if (kReleaseMode) {
     File logFile = await File(
-            "${GlobalConfigurations.appDocumentDirectoryPath}\\logs\\log.txt")
+            "${GlobalConfigurations.appDocumentDirectoryPath}\\logs\\${DateFormat('dd-MM-yyyy').format(DateTime.now())}.txt")
         .create(recursive: true);
     GlobalConfigurations.logger = Logger(
       output: FileOutput(file: logFile),
