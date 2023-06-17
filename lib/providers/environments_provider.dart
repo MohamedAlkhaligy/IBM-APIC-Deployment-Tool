@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:fluent_ui/fluent_ui.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import '../global_configurations.dart';
@@ -33,7 +33,21 @@ class EnvironmentsProvider with ChangeNotifier {
     environments.environments.removeWhere(
         (element) => environment.environmentID == element.environmentID);
     _environmentsBox.put(ENVIRONMENTS, environments);
+    _releaseEnvironmentScreenPage(environment);
     notifyListeners();
+  }
+
+  /// This is to release memory used by the environment screen
+  void _releaseEnvironmentScreenPage(environment) {
+    if (GlobalConfigurations.appType == AppType.singlePageApp) {
+      int index = HomeNavigatorScreen.pages.indexWhere((pageWidget) =>
+          (pageWidget is EnvironmentScreen &&
+              pageWidget.environment.environmentID ==
+                  environment.environmentID));
+      if (index != -1) {
+        HomeNavigatorScreen.pages[index] = const SizedBox();
+      }
+    }
   }
 
   addEnvironment(Environment environment) {
