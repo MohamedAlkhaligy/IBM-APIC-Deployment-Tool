@@ -1,14 +1,21 @@
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:ibm_apic_dt/global_configurations.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../screens/home_navigator_screen.dart';
 import '../screens/home_screen.dart';
 import '../icons/github_icons.dart';
 
-class HomeAppBar extends StatelessWidget {
+class HomeAppBar extends StatefulWidget {
   final String text;
 
   const HomeAppBar({this.text = "IBM API Connect Deployment Tool", super.key});
 
+  @override
+  State<HomeAppBar> createState() => _HomeAppBarState();
+}
+
+class _HomeAppBarState extends State<HomeAppBar> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -20,7 +27,7 @@ class HomeAppBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(text),
+          Text(widget.text),
           Row(
             children: [
               IconButton(
@@ -36,8 +43,16 @@ class HomeAppBar extends StatelessWidget {
                   FluentIcons.home,
                   size: 20,
                 ),
-                onPressed: () => Navigator.of(context)
-                    .pushReplacementNamed(HomeScreen.routeName),
+                onPressed: () {
+                  if (GlobalConfigurations.appType == AppType.singlePageApp) {
+                    setState(() => HomeNavigatorScreen.pageController
+                        .jumpToPage(
+                            HomeNavigatorScreen.viewEnvironmentsPageIndex));
+                  } else {
+                    Navigator.of(context)
+                        .pushReplacementNamed(HomeScreen.routeName);
+                  }
+                },
               ),
             ],
           )

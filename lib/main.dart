@@ -18,6 +18,7 @@ import './navigation_service.dart';
 import './providers/environments_provider.dart';
 import './screens/home_screen.dart';
 import './utilities/routing_utilities.dart';
+import 'screens/home_navigator_screen.dart';
 
 void createAppDirectories(String appDocumentDirectoryPath) {
   String hivePath = "$appDocumentDirectoryPath\\hive";
@@ -110,21 +111,33 @@ class App extends StatelessWidget {
     if (Platform.isWindows) {
       HttpOverrides.global = MyHttpOverrides();
     }
+    String title = 'Deployment Tool';
+    FluentThemeData theme = FluentThemeData(
+      scrollbarTheme: const ScrollbarThemeData()
+          .merge(const ScrollbarThemeData(thickness: 8)),
+      scaffoldBackgroundColor: const Color.fromRGBO(20, 20, 20, 1),
+      brightness: Brightness.dark,
+      accentColor: AccentColor.swatch(GlobalConfigurations.fluentUISwatch),
+      visualDensity: VisualDensity.standard,
+      focusTheme: FocusThemeData(
+        glowFactor: is10footScreen() ? 2.0 : 0.0,
+      ),
+    );
+    if (GlobalConfigurations.appType == AppType.singlePageApp) {
+      return FluentApp(
+        navigatorKey: NavigationService.navigatorKey,
+        title: title,
+        themeMode: ThemeMode.dark,
+        darkTheme: theme,
+        home: const HomeNavigatorScreen(),
+        onGenerateRoute: RoutingUtilities.generateRoute,
+      );
+    }
     return FluentApp(
       navigatorKey: NavigationService.navigatorKey,
-      title: 'Deployment Tool',
+      title: title,
       themeMode: ThemeMode.dark,
-      darkTheme: FluentThemeData(
-        scrollbarTheme: const ScrollbarThemeData()
-            .merge(const ScrollbarThemeData(thickness: 8)),
-        scaffoldBackgroundColor: const Color.fromRGBO(20, 20, 20, 1),
-        brightness: Brightness.dark,
-        accentColor: AccentColor.swatch(GlobalConfigurations.fluentUISwatch),
-        visualDensity: VisualDensity.standard,
-        focusTheme: FocusThemeData(
-          glowFactor: is10footScreen() ? 2.0 : 0.0,
-        ),
-      ),
+      darkTheme: theme,
       initialRoute: HomeScreen.routeName,
       // home: EnvironmentScreen(
       //   Environment(

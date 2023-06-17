@@ -38,5 +38,7 @@ class GlobalConfigurations {
 
   static late Logger logger;
 
+  static AppType appType = AppType.singlePageApp;
+
   static const String debugginProxyURL = "https://localhost:2000";
 }
