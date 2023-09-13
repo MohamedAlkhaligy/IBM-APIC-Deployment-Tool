@@ -122,7 +122,7 @@ class ProductService {
       });
 
       final dio = Dio(BaseOptions(
-        receiveTimeout: const Duration(seconds: 20),
+        receiveTimeout: const Duration(seconds: 60),
       ));
 
       Response? httpResponse;
