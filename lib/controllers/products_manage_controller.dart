@@ -129,6 +129,7 @@ class ProductsManageController {
     );
     _totalCatalogProducts = productPage.totalCatalogProducts;
     _products = productPage.currentProductsSubset;
+    _productsSelected = 0;
   }
 
   Future<void> loadData() async {
