@@ -29,7 +29,8 @@ class _PublishConfirmation {
         migrateSubscribtions = true;
 }
 
-class _ProductsPublishScreenState extends State<ProductsPublishScreen> {
+class _ProductsPublishScreenState extends State<ProductsPublishScreen>
+    with AutomaticKeepAliveClientMixin<ProductsPublishScreen> {
   final _searchController = TextEditingController();
 
   bool _isLoading = false, _areFilesLoaded = false, _isPublishing = false;
@@ -43,6 +44,9 @@ class _ProductsPublishScreenState extends State<ProductsPublishScreen> {
       checked: false, onChanged: (value) => changeSelectionCallback(true));
   late final _selectedButton = Checkbox(
       checked: null, onChanged: (value) => changeSelectionCallback(false));
+
+  @override
+  bool get wantKeepAlive => true;
 
   Widget _buildSGlobalSelectionButton() {
     if (_productPublishController.productsSelected ==
@@ -234,7 +238,7 @@ class _ProductsPublishScreenState extends State<ProductsPublishScreen> {
               actionsAlignment: MainAxisAlignment.end,
               actionsPadding: const EdgeInsets.all(10),
               actions: <Widget>[
-                TextButton(
+                HyperlinkButton(
                   onPressed: () {
                     confirmation.confirmAction = true;
                     Navigator.of(context).pop(confirmation);
@@ -245,7 +249,7 @@ class _ProductsPublishScreenState extends State<ProductsPublishScreen> {
                   ),
                 ),
                 const SizedBox(width: 25),
-                TextButton(
+                HyperlinkButton(
                   child: const Text(
                     'No',
                     textScaleFactor: 1.5,
@@ -263,232 +267,240 @@ class _ProductsPublishScreenState extends State<ProductsPublishScreen> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-    return _isLoading
-        ? const Loader()
-        : Container(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        const Text("Organization: "),
-                        ComboBox<int>(
-                          value: _productPublishController.organizationIndex,
-                          items: _buildOrgsMenu(),
-                          onChanged: (index) => setState(() {
-                            _productPublishController.organizationIndex =
-                                index!;
-                            _applyChange(ChangeType.organization);
-                          }),
-                        ),
-                        const SizedBox(width: 10),
-                        const Text("Catalog: "),
-                        ComboBox<int>(
-                          value: _productPublishController.catalogIndex,
-                          items: _buildCatalogsMenu(),
-                          onChanged: (index) => setState(() {
-                            _productPublishController.catalogIndex = index!;
-                            _applyChange(ChangeType.catalog);
-                          }),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(width: 10),
-                    if (_productPublishController.productsInfos.isNotEmpty)
-                      _buildGlobalButtons(),
-                    if (_productPublishController.productsInfos.isEmpty)
-                      IconButton(
-                        icon: const Icon(FluentIcons.refresh),
-                        onPressed: () => _refreshData(),
-                      )
-                  ],
-                ),
-                const SizedBox(height: 15),
-                !_areFilesLoaded
-                    ? Container(
-                        decoration: BoxDecoration(
-                          borderRadius:
-                              const BorderRadius.all(Radius.circular(10)),
-                          color: Colors.black.withOpacity(0.2),
-                        ),
-                        width: screenWidth,
-                        height: screenHeight * 0.7,
-                        child: Center(
-                          child: MouseRegion(
-                            onHover: (event) =>
-                                setState(() => color = Colors.grey),
-                            onExit: (event) =>
-                                setState(() => color = Colors.white),
-                            cursor: SystemMouseCursors.click,
-                            child: GestureDetector(
-                              onTap: () async {
-                                setState(() => _isLoading = true);
-                                _areFilesLoaded = await showDialog<bool>(
-                                      barrierDismissible: false,
-                                      context: context,
-                                      builder: (ctx) {
-                                        return UploadProductsScreen(
-                                          _productPublishController,
-                                        );
-                                      },
-                                    ) ??
-                                    false;
-                                setState(() => _isLoading = false);
-                              },
-                              child: SizedBox(
-                                width: screenWidth / 2,
-                                height: screenHeight * 0.7 / 2,
-                                child: DottedBorder(
-                                  color: color,
-                                  radius: const Radius.circular(15),
-                                  strokeWidth: 2,
-                                  dashPattern: const [10, 10],
-                                  borderType: BorderType.RRect,
-                                  child: Center(
-                                    child: Icon(
-                                      FluentIcons.add,
-                                      size: 45,
-                                      color: color,
+    return Container(
+      key: widget.key,
+      child: _isLoading
+          ? const Loader()
+          : Container(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          const Text("Organization: "),
+                          ComboBox<int>(
+                            value: _productPublishController.organizationIndex,
+                            items: _buildOrgsMenu(),
+                            onChanged: (index) => setState(() {
+                              _productPublishController.organizationIndex =
+                                  index!;
+                              _applyChange(ChangeType.organization);
+                            }),
+                          ),
+                          const SizedBox(width: 10),
+                          const Text("Catalog: "),
+                          ComboBox<int>(
+                            value: _productPublishController.catalogIndex,
+                            items: _buildCatalogsMenu(),
+                            onChanged: (index) => setState(() {
+                              _productPublishController.catalogIndex = index!;
+                              _applyChange(ChangeType.catalog);
+                            }),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(width: 10),
+                      if (_productPublishController.productsInfos.isNotEmpty)
+                        _buildGlobalButtons(),
+                      if (_productPublishController.productsInfos.isEmpty)
+                        IconButton(
+                          icon: const Icon(FluentIcons.refresh),
+                          onPressed: () => _refreshData(),
+                        )
+                    ],
+                  ),
+                  const SizedBox(height: 15),
+                  !_areFilesLoaded
+                      ? Container(
+                          decoration: BoxDecoration(
+                            borderRadius:
+                                const BorderRadius.all(Radius.circular(10)),
+                            color: Colors.black.withOpacity(0.2),
+                          ),
+                          width: screenWidth,
+                          height: screenHeight * 0.7,
+                          child: Center(
+                            child: MouseRegion(
+                              onHover: (event) =>
+                                  setState(() => color = Colors.grey),
+                              onExit: (event) =>
+                                  setState(() => color = Colors.white),
+                              cursor: SystemMouseCursors.click,
+                              child: GestureDetector(
+                                onTap: () async {
+                                  setState(() => _isLoading = true);
+                                  _areFilesLoaded = await showDialog<bool>(
+                                        barrierDismissible: false,
+                                        context: context,
+                                        builder: (ctx) {
+                                          return UploadProductsScreen(
+                                            _productPublishController,
+                                          );
+                                        },
+                                      ) ??
+                                      false;
+                                  setState(() => _isLoading = false);
+                                },
+                                child: SizedBox(
+                                  width: screenWidth / 2,
+                                  height: screenHeight * 0.7 / 2,
+                                  child: DottedBorder(
+                                    color: color,
+                                    radius: const Radius.circular(15),
+                                    strokeWidth: 2,
+                                    dashPattern: const [10, 10],
+                                    borderType: BorderType.RRect,
+                                    child: Center(
+                                      child: Icon(
+                                        FluentIcons.add,
+                                        size: 45,
+                                        color: color,
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                      )
-                    : Column(
-                        children: [
-                          Row(
-                            children: [
-                              _buildSGlobalSelectionButton(),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: TextBox(
-                                  controller: _searchController,
-                                  onChanged: (value) {
-                                    _productPublishController
-                                        .searchProduct(value);
-                                    changeSelectionCallback(false);
-                                    setState(() {});
-                                  },
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              ComboBox<SortType>(
-                                items: const [
-                                  ComboBoxItem(
-                                    value: SortType.ascending,
-                                    child: Text("Ascending"),
-                                  ),
-                                  ComboBoxItem(
-                                    value: SortType.descending,
-                                    child: Text("Descending"),
-                                  )
-                                ],
-                                icon: const Icon(FluentIcons.sort),
-                                iconSize: 15,
-                                onChanged: ((value) {
-                                  setState(() {
-                                    sortType = value!;
-                                    _productPublishController.sort(sortType);
-                                  });
-                                }),
-                                value: sortType,
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          Container(
-                            width: screenWidth,
-                            height: 450,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(15),
-                              color: Colors.black.withOpacity(0.2),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 4, vertical: 8),
-                            child: _isPublishing
-                                ? const Loader()
-                                : ListView.builder(
-                                    itemCount: _productPublishController
-                                        .productsInfos.length,
-                                    itemBuilder: (ctx, index) {
-                                      return ListTile(
-                                        tileColor: ButtonState.all(Colors.grey),
-                                        leading: Checkbox(
-                                          onChanged: (isChecked) =>
-                                              setState(() {
-                                            _productPublishController
-                                                    .productsInfos[index]
-                                                    .isSelected =
-                                                isChecked ?? false;
-                                            _productPublishController
-                                                    .productsSelected +=
-                                                (isChecked ?? false) ? 1 : -1;
-                                          }),
-                                          checked: _productPublishController
-                                              .productsInfos[index].isSelected,
-                                        ),
-                                        title: Text(
-                                          _productPublishController
-                                              .productsInfos[index].title,
-                                          textScaleFactor: 1,
-                                        ),
-                                        subtitle: Text(
-                                          _productPublishController
-                                              .productsInfos[index].version,
-                                        ),
-                                        trailing: Row(
-                                          children: [
-                                            Tooltip(
-                                              message: "Publish Product",
-                                              child: IconButton(
-                                                  icon: const Icon(
-                                                      FluentIcons
-                                                          .publish_content,
-                                                      size: 18),
-                                                  onPressed: () async {
-                                                    final confirmation =
-                                                        await openPublishConfirmationDialog(
-                                                      "Do you want to publish ${_productPublishController.productsInfos[index].name}:${_productPublishController.productsInfos[index].version} to ${_productPublishController.catalogs[_productPublishController.catalogIndex].name}",
-                                                    );
-                                                    if (confirmation != null &&
-                                                        confirmation
-                                                            .confirmAction) {
-                                                      setState(() =>
-                                                          _isPublishing = true);
-                                                      await _productPublishController
-                                                          .publish(index,
-                                                              migrateSubscriptions:
-                                                                  confirmation
-                                                                      .migrateSubscribtions);
-                                                      setState(() =>
-                                                          _isPublishing =
-                                                              false);
-                                                    }
-                                                  }),
-                                            ),
-                                            // const SizedBox(width: 10),
-                                            // const Button(
-                                            //   onPressed: null,
-                                            //   child: Text("Subscribe"),
-                                            // ),
-                                          ],
-                                        ),
-                                      );
+                        )
+                      : Column(
+                          children: [
+                            Row(
+                              children: [
+                                _buildSGlobalSelectionButton(),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: TextBox(
+                                    controller: _searchController,
+                                    onChanged: (value) {
+                                      _productPublishController
+                                          .searchProduct(value);
+                                      changeSelectionCallback(false);
+                                      setState(() {});
                                     },
                                   ),
-                          ),
-                        ],
-                      )
-              ],
+                                ),
+                                const SizedBox(width: 10),
+                                ComboBox<SortType>(
+                                  items: const [
+                                    ComboBoxItem(
+                                      value: SortType.ascending,
+                                      child: Text("Ascending"),
+                                    ),
+                                    ComboBoxItem(
+                                      value: SortType.descending,
+                                      child: Text("Descending"),
+                                    )
+                                  ],
+                                  icon: const Icon(FluentIcons.sort),
+                                  iconSize: 15,
+                                  onChanged: ((value) {
+                                    setState(() {
+                                      sortType = value!;
+                                      _productPublishController.sort(sortType);
+                                    });
+                                  }),
+                                  value: sortType,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            Container(
+                              width: screenWidth,
+                              height: 450,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(15),
+                                color: Colors.black.withOpacity(0.2),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 4, vertical: 8),
+                              child: _isPublishing
+                                  ? const Loader()
+                                  : ListView.builder(
+                                      itemCount: _productPublishController
+                                          .productsInfos.length,
+                                      itemBuilder: (ctx, index) {
+                                        return ListTile(
+                                          tileColor:
+                                              ButtonState.all(Colors.grey),
+                                          leading: Checkbox(
+                                            onChanged: (isChecked) =>
+                                                setState(() {
+                                              _productPublishController
+                                                      .productsInfos[index]
+                                                      .isSelected =
+                                                  isChecked ?? false;
+                                              _productPublishController
+                                                      .productsSelected +=
+                                                  (isChecked ?? false) ? 1 : -1;
+                                            }),
+                                            checked: _productPublishController
+                                                .productsInfos[index]
+                                                .isSelected,
+                                          ),
+                                          title: Text(
+                                            _productPublishController
+                                                .productsInfos[index].title,
+                                            textScaleFactor: 1,
+                                          ),
+                                          subtitle: Text(
+                                            _productPublishController
+                                                .productsInfos[index].version,
+                                          ),
+                                          trailing: Row(
+                                            children: [
+                                              Tooltip(
+                                                message: "Publish Product",
+                                                child: IconButton(
+                                                    icon: const Icon(
+                                                        FluentIcons
+                                                            .publish_content,
+                                                        size: 18),
+                                                    onPressed: () async {
+                                                      final confirmation =
+                                                          await openPublishConfirmationDialog(
+                                                        "Do you want to publish ${_productPublishController.productsInfos[index].name}:${_productPublishController.productsInfos[index].version} to ${_productPublishController.catalogs[_productPublishController.catalogIndex].name}",
+                                                      );
+                                                      if (confirmation !=
+                                                              null &&
+                                                          confirmation
+                                                              .confirmAction) {
+                                                        setState(() =>
+                                                            _isPublishing =
+                                                                true);
+                                                        await _productPublishController
+                                                            .publish(index,
+                                                                migrateSubscriptions:
+                                                                    confirmation
+                                                                        .migrateSubscribtions);
+                                                        setState(() =>
+                                                            _isPublishing =
+                                                                false);
+                                                      }
+                                                    }),
+                                              ),
+                                              // const SizedBox(width: 10),
+                                              // const Button(
+                                              //   onPressed: null,
+                                              //   child: Text("Subscribe"),
+                                              // ),
+                                            ],
+                                          ),
+                                        );
+                                      },
+                                    ),
+                            ),
+                          ],
+                        )
+                ],
+              ),
             ),
-          );
+    );
   }
 }

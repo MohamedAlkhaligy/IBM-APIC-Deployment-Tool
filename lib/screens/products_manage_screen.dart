@@ -19,7 +19,8 @@ class ProductsManageScreen extends StatefulWidget {
   State<ProductsManageScreen> createState() => _ProductsManageScreenState();
 }
 
-class _ProductsManageScreenState extends State<ProductsManageScreen> {
+class _ProductsManageScreenState extends State<ProductsManageScreen>
+    with AutomaticKeepAliveClientMixin<ProductsManageScreen> {
   final _searchController = TextEditingController();
 
   bool _isLoading = false;
@@ -32,6 +33,9 @@ class _ProductsManageScreenState extends State<ProductsManageScreen> {
       checked: false, onChanged: (value) => changeSelectionCallback(true));
   late final _selectedButton = Checkbox(
       checked: null, onChanged: (value) => changeSelectionCallback(false));
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -136,6 +140,7 @@ class _ProductsManageScreenState extends State<ProductsManageScreen> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
@@ -268,7 +273,6 @@ class _ProductsManageScreenState extends State<ProductsManageScreen> {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 20, vertical: 2),
                             child: Expander(
-                              headerHeight: 55,
                               header: ListTile(
                                 leading: Checkbox(
                                   onChanged: (isChecked) => setState(() {

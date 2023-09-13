@@ -252,28 +252,36 @@ class _UploadGlobalPolicyScreenState extends State<UploadGlobalPolicyScreen>
         children: [
           const Text("Publish Global Policy From An Assembly Flow",
               style: TextStyle(fontSize: 24)),
-          TextBox(
-            header: "global-policy",
-            controller: globalPolicyVersionController,
-            onSubmitted: (_) async => await publishGlobalPolicy(),
+          InfoLabel(
+            label: "global-policy",
+            child: TextBox(
+              controller: globalPolicyVersionController,
+              onSubmitted: (_) async => await publishGlobalPolicy(),
+            ),
           ),
           const SizedBox(height: 10),
-          TextBox(
-            header: "info.title",
-            controller: titleController,
-            onSubmitted: (_) async => await publishGlobalPolicy(),
+          InfoLabel(
+            label: "info.title",
+            child: TextBox(
+              controller: titleController,
+              onSubmitted: (_) async => await publishGlobalPolicy(),
+            ),
           ),
           const SizedBox(height: 10),
-          TextBox(
-            header: "info.name",
-            controller: nameController,
-            onSubmitted: (_) async => await publishGlobalPolicy(),
+          InfoLabel(
+            label: "info.name",
+            child: TextBox(
+              controller: nameController,
+              onSubmitted: (_) async => await publishGlobalPolicy(),
+            ),
           ),
           const SizedBox(height: 10),
-          TextBox(
-            header: "info.version",
-            controller: versionController,
-            onSubmitted: (_) async => await publishGlobalPolicy(),
+          InfoLabel(
+            label: "info.version",
+            child: TextBox(
+              controller: versionController,
+              onSubmitted: (_) async => await publishGlobalPolicy(),
+            ),
           ),
           const SizedBox(height: 10),
           Align(
@@ -409,7 +417,6 @@ class _UploadGlobalPolicyScreenState extends State<UploadGlobalPolicyScreen>
         tabWidthBehavior: TabWidthBehavior.equal,
         closeButtonVisibility: CloseButtonVisibilityMode.never,
         showScrollButtons: true,
-        wheelScroll: false,
       ),
     );
   }

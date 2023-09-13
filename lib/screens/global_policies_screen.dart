@@ -33,11 +33,11 @@ class _GlobalPoliciesScreenState extends State<GlobalPoliciesScreen> {
               autofocus: true,
             ),
             actions: [
-              TextButton(
+              HyperlinkButton(
                 child: const Text('Cancel'),
                 onPressed: () => Navigator.of(context).pop(),
               ),
-              TextButton(
+              HyperlinkButton(
                 child: const Text('Create'),
                 onPressed: () => Navigator.of(context).pop(controller.text),
               ),
@@ -46,17 +46,18 @@ class _GlobalPoliciesScreenState extends State<GlobalPoliciesScreen> {
         },
       );
 
-  Future<Tab?> generateTab(Key key) async {
+  Future<Tab?> generateTab() async {
     Tab? tab;
     String? tabName = await openDialog();
     if (tabName != null && tabName.isNotEmpty) {
+      final tabKey = GlobalKey();
       tab = Tab(
         text: Text(tabName),
-        key: key,
+        key: tabKey,
         semanticLabel: 'Tab #${_counter++}',
         icon: const FlutterLogo(),
         body: SingleChildScrollView(
-          key: key,
+          key: GlobalKey(),
           child: GlobalPoliciesSubScreen(
             widget.environment,
           ),
@@ -64,8 +65,8 @@ class _GlobalPoliciesScreenState extends State<GlobalPoliciesScreen> {
         onClosed: () {
           setState(() {
             Key viewedTabKey = _tabs[_currentIndex].key!;
-            int closedTabIndex = _tabs.indexWhere((tab) => tab.key == key);
-            _tabs.removeWhere((tab) => tab.key == key);
+            int closedTabIndex = _tabs.indexWhere((tab) => tab.key == tabKey);
+            _tabs.removeWhere((tab) => tab.key == tabKey);
             if (_currentIndex != closedTabIndex) {
               _currentIndex =
                   _tabs.indexWhere((tab) => tab.key == viewedTabKey);
@@ -98,32 +99,29 @@ class _GlobalPoliciesScreenState extends State<GlobalPoliciesScreen> {
       tabWidthBehavior: TabWidthBehavior.equal,
       closeButtonVisibility: CloseButtonVisibilityMode.always,
       showScrollButtons: true,
-      wheelScroll: false,
       onNewPressed: () async {
-        final tab = await generateTab(UniqueKey());
+        final tab = await generateTab();
         if (tab != null) {
           _tabs.add(tab);
         }
         setState(() {});
       },
-      // onReorder: (oldIndex, newIndex) {
-      //   setState(() {
-      //     print(oldIndex);
-      //     print(newIndex);
-      //     print("");
-      //     if (oldIndex < newIndex) {
-      //       newIndex -= 1;
-      //     }
-      //     final item = _tabs.removeAt(oldIndex);
-      //     _tabs.insert(newIndex, item);
+      onReorder: (oldIndex, newIndex) {
+        setState(() {
+          if (oldIndex < newIndex) {
+            newIndex -= 1;
+          }
 
-      //     if (_currentIndex == newIndex) {
-      //       _currentIndex = oldIndex;
-      //     } else if (_currentIndex == oldIndex) {
-      //       _currentIndex = newIndex;
-      //     }
-      //   });
-      // },
+          final item = _tabs.removeAt(oldIndex);
+          _tabs.insert(newIndex, item);
+
+          if (_currentIndex == newIndex) {
+            _currentIndex = oldIndex;
+          } else if (_currentIndex == oldIndex) {
+            _currentIndex = newIndex;
+          }
+        });
+      },
     );
   }
 }

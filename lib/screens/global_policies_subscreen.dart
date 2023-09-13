@@ -27,10 +27,14 @@ class GlobalPoliciesSubScreen extends StatefulWidget {
       _GlobalPoliciesSubScreenState();
 }
 
-class _GlobalPoliciesSubScreenState extends State<GlobalPoliciesSubScreen> {
+class _GlobalPoliciesSubScreenState extends State<GlobalPoliciesSubScreen>
+    with AutomaticKeepAliveClientMixin<GlobalPoliciesSubScreen> {
   late final GlobalPoliciesController _globalPoliciesController;
 
   bool _isLoading = false;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -174,6 +178,7 @@ class _GlobalPoliciesSubScreenState extends State<GlobalPoliciesSubScreen> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final screenWidth = MediaQuery.of(context).size.width;
     return _isLoading
         ? const Loader()

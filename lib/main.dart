@@ -121,7 +121,7 @@ class App extends StatelessWidget {
       accentColor: AccentColor.swatch(GlobalConfigurations.fluentUISwatch),
       visualDensity: VisualDensity.standard,
       focusTheme: FocusThemeData(
-        glowFactor: is10footScreen() ? 2.0 : 0.0,
+        glowFactor: is10footScreen(context) ? 2.0 : 0.0,
       ),
     );
     if (GlobalConfigurations.appType == AppType.singlePageApp) {

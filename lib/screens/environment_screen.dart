@@ -55,7 +55,6 @@ class _EnvironmentScreenState extends State<EnvironmentScreen>
         tabWidthBehavior: TabWidthBehavior.equal,
         closeButtonVisibility: CloseButtonVisibilityMode.never,
         showScrollButtons: true,
-        wheelScroll: false,
       ),
     );
   }

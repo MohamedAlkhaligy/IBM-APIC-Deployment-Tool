@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/material.dart' as material;
 
@@ -70,11 +72,11 @@ class _ProductsScreenState extends State<ProductsScreen> {
             },
           ),
           actions: [
-            TextButton(
+            HyperlinkButton(
               child: const Text('Cancel'),
               onPressed: () => Navigator.of(context).pop(),
             ),
-            TextButton(
+            HyperlinkButton(
               child: const Text('Create'),
               onPressed: () => Navigator.of(context).pop(controller.text),
             ),
@@ -103,25 +105,26 @@ class _ProductsScreenState extends State<ProductsScreen> {
     }
   }
 
-  Future<Tab?> generateTab(Key key) async {
+  Future<Tab?> generateTab() async {
     Tab? tab;
     String? tabName = await openDialog();
     if (tabName != null && tabName.isNotEmpty) {
       _ProductActionTabMeta tabMeta = getTabMeta(action);
+      final tabKey = GlobalKey();
       tab = Tab(
         text: Text(tabName),
-        key: key,
+        key: tabKey,
         semanticLabel: 'Tab #${_counter++}',
         icon: tabMeta.icon,
         body: SingleChildScrollView(
-          key: key,
+          key: GlobalKey(),
           child: tabMeta.screen,
         ),
         onClosed: () {
           setState(() {
             Key viewedTabKey = _tabs[_currentIndex].key!;
-            int closedTabIndex = _tabs.indexWhere((tab) => tab.key == key);
-            _tabs.removeWhere((tab) => tab.key == key);
+            int closedTabIndex = _tabs.indexWhere((tab) => tab.key == tabKey);
+            _tabs.removeWhere((tab) => tab.key == tabKey);
             if (_currentIndex != closedTabIndex) {
               _currentIndex =
                   _tabs.indexWhere((tab) => tab.key == viewedTabKey);
@@ -147,30 +150,29 @@ class _ProductsScreenState extends State<ProductsScreen> {
       tabWidthBehavior: TabWidthBehavior.equal,
       closeButtonVisibility: CloseButtonVisibilityMode.always,
       showScrollButtons: true,
-      wheelScroll: false,
       onNewPressed: () async {
-        final tab = await generateTab(UniqueKey());
+        // https://stackoverflow.com/questions/75633516/what-should-i-use-on-my-flutter-widget-valuekey-or-key
+        final tab = await generateTab();
         if (tab != null) {
           _tabs.add(tab);
           _currentIndex = _tabs.length - 1;
         }
         setState(() {});
       },
-      onReorder: (oldIndex, newIndex) {
-        setState(() {
-          if (oldIndex < newIndex) {
-            newIndex -= 1;
-          }
-          final item = _tabs.removeAt(oldIndex);
-          _tabs.insert(newIndex, item);
+      onReorder: (oldIndex, newIndex) => setState(() {
+        if (oldIndex < newIndex) {
+          newIndex -= 1;
+        }
 
-          if (_currentIndex == newIndex) {
-            _currentIndex = oldIndex;
-          } else if (_currentIndex == oldIndex) {
-            _currentIndex = newIndex;
-          }
-        });
-      },
+        final item = _tabs.removeAt(oldIndex);
+        _tabs.insert(newIndex, item);
+
+        if (_currentIndex == newIndex) {
+          _currentIndex = oldIndex;
+        } else if (_currentIndex == oldIndex) {
+          _currentIndex = newIndex;
+        }
+      }),
     );
   }
 }

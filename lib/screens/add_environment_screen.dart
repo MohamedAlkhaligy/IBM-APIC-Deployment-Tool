@@ -131,37 +131,49 @@ class _AddEnvironmentScreenState extends State<AddEnvironmentScreen> {
                   children: [
                     const Text("Create your environment",
                         style: TextStyle(fontSize: 24)),
-                    TextBox(
-                      header: "Environment Name",
-                      controller: _environmentNameController,
-                      onSubmitted: (_) => login(context),
+                    InfoLabel(
+                      label: "Environment Name",
+                      child: TextBox(
+                        controller: _environmentNameController,
+                        onSubmitted: (_) => login(context),
+                      ),
                     ),
-                    TextBox(
-                      header: "Client ID",
-                      controller: _clientIDController,
-                      onSubmitted: (_) => login(context),
+                    InfoLabel(
+                      label: "Client ID",
+                      child: TextBox(
+                        controller: _clientIDController,
+                        onSubmitted: (_) => login(context),
+                      ),
                     ),
-                    TextBox(
-                      header: "Client Secret",
-                      controller: _clientSecretController,
-                      onSubmitted: (_) => login(context),
+                    InfoLabel(
+                      label: "Client Secret",
+                      child: TextBox(
+                        controller: _clientSecretController,
+                        onSubmitted: (_) => login(context),
+                      ),
                     ),
-                    TextBox(
-                      header: "Server URL",
-                      controller: _serverURLController,
-                      placeholder: "scheme://host[:port]",
-                      onSubmitted: (_) => login(context),
+                    InfoLabel(
+                      label: "Server URL",
+                      child: TextBox(
+                        controller: _serverURLController,
+                        placeholder: "scheme://host[:port]",
+                        onSubmitted: (_) => login(context),
+                      ),
                     ),
-                    TextBox(
-                      header: "Username",
-                      controller: _usernameController,
-                      onSubmitted: (_) => login(context),
+                    InfoLabel(
+                      label: "Username",
+                      child: TextBox(
+                        controller: _usernameController,
+                        onSubmitted: (_) => login(context),
+                      ),
                     ),
-                    TextBox(
-                      header: "Password",
-                      controller: _passwordController,
-                      obscureText: true,
-                      onSubmitted: (_) => login(context),
+                    InfoLabel(
+                      label: "Password",
+                      child: TextBox(
+                        controller: _passwordController,
+                        obscureText: true,
+                        onSubmitted: (_) => login(context),
+                      ),
                     ),
                     _isLoading
                         ? const Loader()
