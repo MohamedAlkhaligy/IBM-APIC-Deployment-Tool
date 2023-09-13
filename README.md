@@ -1,16 +1,17 @@
-## IBM API Connect Deployment Tool
+## APICExpeditor
 
 A simple GUI-based deployment tool for IBM API Connect that works as an alternative to
-the developer toolkit command-line tool.
+IBM's developer toolkit command-line tool.
 
 #### The tool supports both yaml and json files.
 
 The tool is capable of (so far):
 - Creating different environments' profiles to quickly switch and deploy to different environments.
 - Publishing products.
-- Publishing global policies from global policy files or Open API files.
+- Viewing published products.
+- Publishing global policies from global policy files or OpenAPI files.
 - Assigning global policies as pre-hook, post-hook, or error.
-- Updating global policies from Open API files.
+- Updating global policies from OpenAPI files.
 - Deleting, viewing, and downloading global policies.
 
 The tool was tested on [LTE 10.0.5.0](https://www.ibm.com/support/pages/node/6592957).
