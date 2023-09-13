@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "IBM APIC Deployment Tool" "\0"
+            VALUE "FileDescription", "ibm_apic_dt" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "APICExpeditor" "\0"
+            VALUE "InternalName", "ibm_apic_dt" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2023 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "APICExpeditor.exe" "\0"
-            VALUE "ProductName", "APICExpeditor" "\0"
+            VALUE "OriginalFilename", "ibm_apic_dt.exe" "\0"
+            VALUE "ProductName", "ibm_apic_dt" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
