@@ -38,7 +38,7 @@ const xProxyOperationIDHeader = "x-proxy-operation-id";
 
 app.use(cors());
 
-const customRouter = function(req) {
+const customRouter = function (req) {
 	if (req.headers[xProxyTargetURLHeader]) {
 		// console.log(`New Target URL: ${req.headers[targetURLHeader]}`);
 		return req.headers[xProxyTargetURLHeader];
@@ -56,12 +56,23 @@ app.use(createProxyMiddleware({
 	secure: false,
 	logLevel: 'debug',
 	router: customRouter,
-	onProxyReq: function(proxyReq) {
+	onProxyReq: function (proxyReq, req) {
 		let headers = new Map(Object.entries(configurations.headers));
 		headers.forEach((value, key) => proxyReq.setHeader(key, value));
 
+		let requestBody = '';
+
+		req.on('data', (chunk) => {
+			requestBody += chunk;
+		});
+
+		req.on('end', () => {
+			console.log('Request Body:', requestBody);
+
+		});
+
 	},
-	onProxyRes: responseInterceptor(async(buffer, proxyRes, req, res) => {
+	onProxyRes: responseInterceptor(async (buffer, proxyRes, req, res) => {
 		const body = buffer.toString();
 		console.log(body);
 		res.setHeader("access-control-allow-origin", "*");
