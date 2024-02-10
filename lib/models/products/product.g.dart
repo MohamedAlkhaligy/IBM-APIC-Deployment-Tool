@@ -14,7 +14,8 @@ Product _$ProductFromJson(Map<String, dynamic> json) => Product(
         (k, e) => MapEntry(k, PlanDetails.fromJson(e as Map<String, dynamic>)),
       ),
       apis: (json['apis'] as Map<String, dynamic>).map(
-        (k, e) => MapEntry(k, Api.fromJson(e as Map<String, dynamic>)),
+        (k, e) =>
+            MapEntry(k, ApiFileReference.fromJson(e as Map<String, dynamic>)),
       ),
       visibility:
           VisibilityDto.fromJson(json['visibility'] as Map<String, dynamic>),
@@ -136,10 +137,12 @@ Map<String, dynamic> _$LimitDetailsToJson(LimitDetails instance) {
   return val;
 }
 
-Api _$ApiFromJson(Map<String, dynamic> json) => Api(
+ApiFileReference _$ApiFileReferenceFromJson(Map<String, dynamic> json) =>
+    ApiFileReference(
       ref: json[r'$ref'] as String,
     );
 
-Map<String, dynamic> _$ApiToJson(Api instance) => <String, dynamic>{
+Map<String, dynamic> _$ApiFileReferenceToJson(ApiFileReference instance) =>
+    <String, dynamic>{
       r'$ref': instance.ref,
     };

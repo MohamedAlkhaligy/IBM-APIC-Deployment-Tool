@@ -7,15 +7,26 @@ import 'package:yaml/yaml.dart';
 part 'openapi.g.dart';
 
 @JsonSerializable()
-class OpenAPI {
-  static Future<OpenAPI> loadOpenAPI(File file) async {
+class OpenApi {
+  static Future<OpenApi> loadAndParseToObject(String openApiPath) async {
+    final file = File(openApiPath);
     var openAPIAsString = await file.readAsString();
     if (RegExp("^.*.(yaml|yml)\$").hasMatch(file.path.toLowerCase())) {
       final openAPIAsYaml = loadYaml(openAPIAsString);
       openAPIAsString = json.encode(openAPIAsYaml);
     }
     final openAPIAsJson = jsonDecode(openAPIAsString);
-    return OpenAPI.fromJson(openAPIAsJson);
+    return OpenApi.fromJson(openAPIAsJson);
+  }
+
+  static dynamic loadAndParseToMap(String openApiPath) async {
+    final file = File(openApiPath);
+    var openAPIAsString = await file.readAsString();
+    if (RegExp("^.*.(yaml|yml)\$").hasMatch(file.path.toLowerCase())) {
+      final openAPIAsYaml = loadYaml(openAPIAsString);
+      openAPIAsString = json.encode(openAPIAsYaml);
+    }
+    return jsonDecode(openAPIAsString);
   }
 
   static bool isExtensionSupported(String filename) {
@@ -27,15 +38,15 @@ class OpenAPI {
   @JsonKey(name: 'x-ibm-configuration')
   final IbmConfiguration ibmConfiguration;
 
-  OpenAPI({
+  OpenApi({
     required this.info,
     required this.ibmConfiguration,
   });
 
-  factory OpenAPI.fromJson(Map<String, dynamic> json) =>
-      _$OpenAPIFromJson(json);
+  factory OpenApi.fromJson(Map<String, dynamic> json) =>
+      _$OpenApiFromJson(json);
 
-  Map<String, dynamic> toJson() => _$OpenAPIToJson(this);
+  Map<String, dynamic> toJson() => _$OpenApiToJson(this);
 }
 
 @JsonSerializable()
@@ -64,7 +75,17 @@ class APIInfo {
 class IbmConfiguration {
   final APIAssembly assembly;
 
-  IbmConfiguration({required this.assembly});
+  @JsonKey(name: 'type')
+  final String apiType;
+
+  @JsonKey(name: 'wsdl-definition')
+  final WsdlDefinition? wsdlDefinition;
+
+  IbmConfiguration({
+    required this.assembly,
+    required this.apiType,
+    required this.wsdlDefinition,
+  });
 
   factory IbmConfiguration.fromJson(Map<String, dynamic> json) =>
       _$IbmConfigurationFromJson(json);
@@ -78,9 +99,38 @@ class APIAssembly {
   @JsonKey(name: 'catch')
   final List<dynamic>? catchList;
 
-  APIAssembly({required this.executeList, required this.catchList});
+  APIAssembly({
+    required this.executeList,
+    required this.catchList,
+  });
 
   factory APIAssembly.fromJson(Map<String, dynamic> json) =>
       _$APIAssemblyFromJson(json);
   Map<String, dynamic> toJson() => _$APIAssemblyToJson(this);
+}
+
+@JsonSerializable()
+class WsdlDefinition {
+  @JsonKey(name: 'wsdl')
+  final String wsdlFileRelativePath;
+
+  @JsonKey(name: 'service')
+  final String service;
+
+  @JsonKey(name: 'port')
+  final String port;
+
+  @JsonKey(name: 'soap-version')
+  final String soapVersion;
+
+  WsdlDefinition({
+    required this.wsdlFileRelativePath,
+    required this.service,
+    required this.port,
+    required this.soapVersion,
+  });
+
+  factory WsdlDefinition.fromJson(Map<String, dynamic> json) =>
+      _$WsdlDefinitionFromJson(json);
+  Map<String, dynamic> toJson() => _$WsdlDefinitionToJson(this);
 }

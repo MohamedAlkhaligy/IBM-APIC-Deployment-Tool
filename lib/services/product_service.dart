@@ -2,7 +2,10 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:enum_to_string/enum_to_string.dart';
 import 'package:http_parser/http_parser.dart';
+import 'package:ibm_apic_dt/enums/api_type_enums.dart';
+import 'package:ibm_apic_dt/models/products/wsdl_info.dart';
 import 'package:ibm_apic_dt/utilities/http_utilities.dart';
 import 'package:uuid/uuid.dart';
 import 'package:path/path.dart' as path;
@@ -11,10 +14,9 @@ import '../dtos/products/list_products/response/list_products_response_dto.dart'
 import '../errors/openapi_type_not_supported.dart';
 import '../errors/path_not_file_exception.dart';
 import '../models/products/openapi.dart';
-import '../models/products/openapi_info.dart';
+import '../models/products/api_info.dart';
 import '../models/products/product.dart';
 import '../models/products/product_adaptor.dart';
-import '../models/products/product_manage_meta.dart';
 import '../models/products/products_page.dart';
 import './auth_service.dart';
 import '../global_configurations.dart';
@@ -34,48 +36,102 @@ class ProductService {
     return _productService;
   }
 
-  Future<List<OpenAPIInfo>> loadProductAPIsInfo(
+  Future<List<ApiInfo>> loadProductApiInfos(
       Product product, String productFilePath) async {
-    List<OpenAPIInfo> openAPIInfos = [];
-
+    List<ApiInfo> apisInfos = [];
     for (final entry in product.apis.entries) {
       String key = entry.key;
-      Api api = entry.value;
-      String openAPIPath = path.join(
-          path.dirname(productFilePath), api.ref.replaceAll("/", "\\"));
-      if (!await FileSystemEntity.isFile(openAPIPath)) {
-        throw PathNotFileException(
-            "One or more oh the API paths provided in the ${product.info.name}:${product.info.version} are not valid file path");
-      }
+      ApiFileReference apiFileReference = entry.value;
+      String apiFilePath = await _buildAndValidateApiFileAbsoultePath(
+          productFilePath, apiFileReference, product);
 
-      String openAPIFilename = path.basename(openAPIPath);
-      if (!OpenAPI.isExtensionSupported(openAPIFilename)) {
-        throw OpenAPITypeNotSupported(
-            "One or more oh the API paths provided in the ${product.info.name}:${product.info.version} are not yaml-based");
-      }
+      final api = await OpenApi.loadAndParseToObject(apiFilePath);
 
-      final openAPI = await OpenAPI.loadOpenAPI(File(openAPIPath));
-      openAPIInfos.add(
-        OpenAPIInfo(
-          path: openAPIPath,
-          filename: openAPIFilename,
-          name: openAPI.info.name,
-          version: openAPI.info.version,
-          apiProductKey: key,
-        ),
+      ApiTypeEnum apiType = EnumToString.fromString(
+          ApiTypeEnum.values, api.ibmConfiguration.apiType)!;
+
+      final id = const Uuid().v4();
+      final apiTempFilename = "api_$id.json";
+      final apiTempFile = await File(
+              "${GlobalConfigurations.appDocumentDirectoryPath}\\temp\\$apiTempFilename")
+          .create();
+
+      // Load and then convert to json if yaml then decode to map
+      final apiAsMap = await OpenApi.loadAndParseToMap(apiFilePath);
+      ApiInfo apiInfo = ApiInfo(
+        name: api.info.name,
+        version: api.info.version,
+        apiProductKey: key,
+        apiTypeEnum: apiType,
+        file: apiTempFile,
       );
+
+      if (apiType == ApiTypeEnum.wsdl) {
+        String wsdlFileAbsoultePath =
+            await _buildAndValidateWsdlFileAbsoultePath(
+          api.ibmConfiguration.wsdlDefinition!.wsdlFileRelativePath,
+          apiFilePath,
+          api.info.name,
+          api.info.version,
+        );
+        String wsdlFileName =
+            "wsdl_${api.info.name}${api.info.version}${path.basenameWithoutExtension(wsdlFileAbsoultePath)}";
+        apiAsMap['x-ibm-configuration']['wsdl-definition']['wsdl'] =
+            wsdlFileName;
+        await apiTempFile.writeAsString(jsonEncode(apiAsMap));
+        apiInfo.wsdlInfo =
+            WsdlInfo(path: wsdlFileAbsoultePath, filename: wsdlFileName);
+      }
+      apisInfos.add(apiInfo);
     }
-    return openAPIInfos;
+    return apisInfos;
   }
 
-  ProductAdaptor loadProductAdaptor(
+  Future<String> _buildAndValidateApiFileAbsoultePath(
+      String productFilePath, ApiFileReference api, Product product) async {
+    String apiFilePath =
+        path.join(path.dirname(productFilePath), api.ref.replaceAll("/", "\\"));
+    if (!await FileSystemEntity.isFile(apiFilePath)) {
+      throw PathNotFileException(
+          "One or more of the API paths provided in the ${product.info.name}:${product.info.version} are not valid file path");
+    }
+    String apiFilename = path.basename(apiFilePath);
+    if (!OpenApi.isExtensionSupported(apiFilename)) {
+      throw OpenAPITypeNotSupported(
+          "One or more of the API paths provided in the ${product.info.name}:${product.info.version} are not yaml-based");
+    }
+    return apiFilePath;
+  }
+
+  Future<String> _buildAndValidateWsdlFileAbsoultePath(
+    String wsdlFileRelativePath,
+    String apiFilePath,
+    String apiName,
+    String apiVersion,
+  ) async {
+    String wsdlFileAbsolutePath = path.join(
+        path.dirname(apiFilePath), wsdlFileRelativePath.replaceAll("/", "\\"));
+    if (!await FileSystemEntity.isFile(apiFilePath)) {
+      throw PathNotFileException(
+          "WSDL File path provided in the $apiName:$apiVersion is not valid");
+    }
+
+    String wsdlFilename = path.basename(wsdlFileAbsolutePath);
+    if (!RegExp("^.*.(zip)\$").hasMatch(wsdlFilename.toLowerCase())) {
+      throw OpenAPITypeNotSupported(
+          "One or more of the API paths provided in the $apiName:$apiVersion are not yaml-based");
+    }
+    return wsdlFileAbsolutePath;
+  }
+
+  ProductAdaptor _loadProductAdaptor(
     Product product,
-    List<OpenAPIInfo> openAPIInfos,
+    List<ApiInfo> openAPIInfos,
   ) {
-    Map<String, ApiAdaptor> apis = {};
+    Map<String, ApiCloudReference> apis = {};
     for (final openAPIInfo in openAPIInfos) {
       apis[openAPIInfo.apiProductKey] =
-          ApiAdaptor(name: "${openAPIInfo.name}:${openAPIInfo.version}");
+          ApiCloudReference(name: "${openAPIInfo.name}:${openAPIInfo.version}");
     }
     return ProductAdaptor.fromProduct(product, apis);
   }
@@ -88,7 +144,7 @@ class ProductService {
     String queryParameters = "",
     ignoreError = false,
   }) async {
-    File? productJsonFile;
+    List<File> tempFiles = [];
     try {
       // await AuthService.getInstance().introspectAndLogin(environment);
 
@@ -102,19 +158,25 @@ class ProductService {
         authorization: environment.accessToken,
       );
 
-      final String productFilename = "$id.json";
-      productJsonFile = await File(
-              "${GlobalConfigurations.appDocumentDirectoryPath}\\temp\\$productFilename")
+      final String productFileName = "product_$id.json";
+      File productTempJsonFile = await File(
+              "${GlobalConfigurations.appDocumentDirectoryPath}\\temp\\$productFileName")
           .create();
+      tempFiles.add(productTempJsonFile);
+
       final product = await Product.loadFromFile(File(productInfo.filePath));
-      final openAPIsInfos =
-          await loadProductAPIsInfo(product, productInfo.filePath);
-      final productAdaptor = loadProductAdaptor(product, openAPIsInfos);
-      await productJsonFile.writeAsString(json.encode(productAdaptor.toJson()));
+      final apiInfos = await loadProductApiInfos(product, productInfo.filePath);
+      for (final apiInfo in apiInfos) {
+        tempFiles.add(apiInfo.file);
+      }
+
+      final productAdaptor = _loadProductAdaptor(product, apiInfos);
+      await productTempJsonFile
+          .writeAsString(json.encode(productAdaptor.toJson()));
 
       var formData = FormData();
-      formData.files.addAll(
-          getFormDataFiles(productJsonFile, productFilename, openAPIsInfos));
+      formData.files.addAll(await getFormDataFiles(
+          productTempJsonFile, productFileName, apiInfos));
 
       logger.i({
         "url": url,
@@ -122,7 +184,7 @@ class ProductService {
       });
 
       final dio = Dio(BaseOptions(
-        receiveTimeout: const Duration(seconds: 20),
+        receiveTimeout: const Duration(seconds: 60),
       ));
 
       Response? httpResponse;
@@ -147,8 +209,8 @@ class ProductService {
             environment.accessToken = accessToken;
             headers.authorization = accessToken;
             formData = FormData();
-            formData.files.addAll(getFormDataFiles(
-                productJsonFile, productFilename, openAPIsInfos));
+            formData.files.addAll(await getFormDataFiles(
+                productTempJsonFile, productFileName, apiInfos));
             httpResponse = await dio.post(url,
                 data: formData,
                 options: Options(
@@ -175,7 +237,7 @@ class ProductService {
       }
 
       if (httpResponse != null && httpResponse.statusCode == 201) {
-        productJsonFile.delete();
+        productTempJsonFile.delete();
         return true;
       }
     } on DioError catch (error, stackTrace) {
@@ -200,15 +262,17 @@ class ProductService {
             "${productInfo.name}:${productInfo.version}\n$error");
       }
     } finally {
-      if (productJsonFile != null) {
-        productJsonFile.delete();
+      for (var tempFile in tempFiles) {
+        tempFile.delete();
       }
     }
     return false;
   }
 
-  List<MapEntry<String, MultipartFile>> getFormDataFiles(File productJsonFile,
-      String productFilename, List<OpenAPIInfo> openAPIsInfos) {
+  Future<List<MapEntry<String, MultipartFile>>> getFormDataFiles(
+      File productJsonFile,
+      String productFilename,
+      List<ApiInfo> openAPIsInfos) async {
     final List<MapEntry<String, MultipartFile>> files = [];
     files.add(
       MapEntry(
@@ -220,17 +284,34 @@ class ProductService {
         ),
       ),
     );
-    for (final api in openAPIsInfos) {
+    for (final apiInfo in openAPIsInfos) {
       files.add(
         MapEntry(
           "openapi",
           MultipartFile.fromFileSync(
-            api.path,
-            filename: api.filename,
-            contentType: MediaType.parse('application/yaml'),
+            apiInfo.file.path,
+            filename: path.basename(apiInfo.file.path),
+            contentType: MediaType.parse('application/json'),
           ),
         ),
       );
+
+      if (apiInfo.apiTypeEnum == ApiTypeEnum.wsdl) {
+        if (apiInfo.wsdlInfo == null) {
+          throw OpenAPITypeNotSupported(
+              "WSDL Info is not provided provided in the ${apiInfo.name}:${apiInfo.version} API");
+        }
+        files.add(
+          MapEntry(
+            'wsdl',
+            MultipartFile.fromFileSync(
+              apiInfo.wsdlInfo!.path,
+              filename: apiInfo.wsdlInfo!.filename,
+              contentType: MediaType.parse('application/zip'),
+            ),
+          ),
+        );
+      }
     }
     return files;
   }

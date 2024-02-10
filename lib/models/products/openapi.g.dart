@@ -6,13 +6,13 @@ part of 'openapi.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-OpenAPI _$OpenAPIFromJson(Map<String, dynamic> json) => OpenAPI(
+OpenApi _$OpenApiFromJson(Map<String, dynamic> json) => OpenApi(
       info: APIInfo.fromJson(json['info'] as Map<String, dynamic>),
       ibmConfiguration: IbmConfiguration.fromJson(
           json['x-ibm-configuration'] as Map<String, dynamic>),
     );
 
-Map<String, dynamic> _$OpenAPIToJson(OpenAPI instance) => <String, dynamic>{
+Map<String, dynamic> _$OpenApiToJson(OpenApi instance) => <String, dynamic>{
       'info': instance.info,
       'x-ibm-configuration': instance.ibmConfiguration,
     };
@@ -32,11 +32,18 @@ Map<String, dynamic> _$APIInfoToJson(APIInfo instance) => <String, dynamic>{
 IbmConfiguration _$IbmConfigurationFromJson(Map<String, dynamic> json) =>
     IbmConfiguration(
       assembly: APIAssembly.fromJson(json['assembly'] as Map<String, dynamic>),
+      apiType: json['type'] as String,
+      wsdlDefinition: json['wsdl-definition'] == null
+          ? null
+          : WsdlDefinition.fromJson(
+              json['wsdl-definition'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$IbmConfigurationToJson(IbmConfiguration instance) =>
     <String, dynamic>{
       'assembly': instance.assembly,
+      'type': instance.apiType,
+      'wsdl-definition': instance.wsdlDefinition,
     };
 
 APIAssembly _$APIAssemblyFromJson(Map<String, dynamic> json) => APIAssembly(
@@ -48,4 +55,20 @@ Map<String, dynamic> _$APIAssemblyToJson(APIAssembly instance) =>
     <String, dynamic>{
       'execute': instance.executeList,
       'catch': instance.catchList,
+    };
+
+WsdlDefinition _$WsdlDefinitionFromJson(Map<String, dynamic> json) =>
+    WsdlDefinition(
+      wsdlFileRelativePath: json['wsdl'] as String,
+      service: json['service'] as String,
+      port: json['port'] as String,
+      soapVersion: json['soap-version'] as String,
+    );
+
+Map<String, dynamic> _$WsdlDefinitionToJson(WsdlDefinition instance) =>
+    <String, dynamic>{
+      'wsdl': instance.wsdlFileRelativePath,
+      'service': instance.service,
+      'port': instance.port,
+      'soap-version': instance.soapVersion,
     };

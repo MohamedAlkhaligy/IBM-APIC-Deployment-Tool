@@ -49,7 +49,7 @@ class _UploadGlobalPolicyScreenState extends State<UploadGlobalPolicyScreen>
       titleController = TextEditingController(),
       nameController = TextEditingController(),
       versionController = TextEditingController();
-  late OpenAPI openAPI;
+  late OpenApi openAPI;
   late File openAPIFile;
 
   int _currentIndex = 0;
@@ -182,10 +182,9 @@ class _UploadGlobalPolicyScreenState extends State<UploadGlobalPolicyScreen>
         globalPolicyVersionController.text.isNotEmpty;
   }
 
-  Future<void> loadOpenAPIFile(String openAPIFilePath) async {
+  Future<void> loadApiFile(String apiFilePath) async {
     try {
-      openAPIFile = File(openAPIFilePath);
-      openAPI = await OpenAPI.loadOpenAPI(openAPIFile);
+      openAPI = await OpenApi.loadAndParseToObject(apiFilePath);
 
       if (nameController.text.isEmpty) {
         nameController.text = openAPI.info.name;
@@ -193,7 +192,6 @@ class _UploadGlobalPolicyScreenState extends State<UploadGlobalPolicyScreen>
       if (versionController.text.isEmpty) {
         versionController.text = openAPI.info.version;
       }
-
       if (titleController.text.isEmpty) {
         titleController.text = openAPI.info.title ?? openAPI.info.name;
       }
@@ -313,12 +311,12 @@ class _UploadGlobalPolicyScreenState extends State<UploadGlobalPolicyScreen>
                               detail.files.first.path)) {
                             ErrorHandlingUtilities.instance.showPopUpError(
                                 "Please, upload single file at a time!");
-                          } else if (!OpenAPI.isExtensionSupported(
+                          } else if (!OpenApi.isExtensionSupported(
                               detail.files.first.name.toLowerCase())) {
                             ErrorHandlingUtilities.instance.showPopUpError(
                                 "Only yaml files are supported!");
                           } else {
-                            await loadOpenAPIFile(detail.files.first.path);
+                            await loadApiFile(detail.files.first.path);
                           }
                         },
                         onDragEntered: (details) =>
@@ -380,8 +378,7 @@ class _UploadGlobalPolicyScreenState extends State<UploadGlobalPolicyScreen>
                       lockParentWindow: true,
                     );
                     if (filePickerResult != null) {
-                      await loadOpenAPIFile(
-                          filePickerResult.files.single.path!);
+                      await loadApiFile(filePickerResult.files.single.path!);
                     }
                   },
                 )

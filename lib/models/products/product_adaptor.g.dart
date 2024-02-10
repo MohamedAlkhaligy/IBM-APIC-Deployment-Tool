@@ -15,7 +15,8 @@ ProductAdaptor _$ProductAdaptorFromJson(Map<String, dynamic> json) =>
         (k, e) => MapEntry(k, PlanDetails.fromJson(e as Map<String, dynamic>)),
       ),
       apis: (json['apis'] as Map<String, dynamic>).map(
-        (k, e) => MapEntry(k, ApiAdaptor.fromJson(e as Map<String, dynamic>)),
+        (k, e) =>
+            MapEntry(k, ApiCloudReference.fromJson(e as Map<String, dynamic>)),
       ),
       visibility:
           VisibilityDto.fromJson(json['visibility'] as Map<String, dynamic>),
@@ -32,11 +33,12 @@ Map<String, dynamic> _$ProductAdaptorToJson(ProductAdaptor instance) =>
       'product': instance.productVersion,
     };
 
-ApiAdaptor _$ApiAdaptorFromJson(Map<String, dynamic> json) => ApiAdaptor(
+ApiCloudReference _$ApiCloudReferenceFromJson(Map<String, dynamic> json) =>
+    ApiCloudReference(
       name: json['name'] as String,
     );
 
-Map<String, dynamic> _$ApiAdaptorToJson(ApiAdaptor instance) =>
+Map<String, dynamic> _$ApiCloudReferenceToJson(ApiCloudReference instance) =>
     <String, dynamic>{
       'name': instance.name,
     };

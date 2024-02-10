@@ -218,15 +218,15 @@ class ProductsPublishController {
       // Only check if the apis exist
       for (final entry in product.apis.entries) {
         final api = entry.value;
-        String openAPIPath = path.join(
+        String apiFileAbsoultePath = path.join(
             path.dirname(productFile.path), api.ref.replaceAll("/", "\\"));
-        if (!await FileSystemEntity.isFile(openAPIPath)) {
+        if (!await FileSystemEntity.isFile(apiFileAbsoultePath)) {
           throw PathNotFileException(
               "One or more oh the API paths provided in the ${product.info.name}:${product.info.version} are not valid file path");
         }
 
-        String openAPIFilename = path.basename(openAPIPath);
-        if (!OpenAPI.isExtensionSupported(openAPIFilename)) {
+        String openAPIFilename = path.basename(apiFileAbsoultePath);
+        if (!OpenApi.isExtensionSupported(openAPIFilename)) {
           throw OpenAPITypeNotSupported(
               "One or more oh the API paths provided in the ${product.info.name}:${product.info.version} are not yaml-based");
         }
@@ -234,7 +234,7 @@ class ProductsPublishController {
         // This is to check if the yaml file contains api info object giving
         // higher chance that this is an api file. The actaul validation is done
         // from the api management server when the product is published
-        await OpenAPI.loadOpenAPI(File(openAPIPath));
+        await OpenApi.loadAndParseToObject(apiFileAbsoultePath);
       }
 
       // Validation Done

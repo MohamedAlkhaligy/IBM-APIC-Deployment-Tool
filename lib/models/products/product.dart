@@ -20,7 +20,7 @@ class Product {
   final Map<String, PlanDetails> plans;
 
   @JsonKey(name: 'apis')
-  final Map<String, Api> apis;
+  final Map<String, ApiFileReference> apis;
 
   @JsonKey(name: 'visibility')
   final VisibilityDto visibility;
@@ -154,12 +154,13 @@ class LimitDetails {
 }
 
 @JsonSerializable()
-class Api {
+class ApiFileReference {
   @JsonKey(name: '\$ref')
   final String ref;
 
-  Api({required this.ref});
+  ApiFileReference({required this.ref});
 
-  factory Api.fromJson(Map<String, dynamic> json) => _$ApiFromJson(json);
-  Map<String, dynamic> toJson() => _$ApiToJson(this);
+  factory ApiFileReference.fromJson(Map<String, dynamic> json) =>
+      _$ApiFileReferenceFromJson(json);
+  Map<String, dynamic> toJson() => _$ApiFileReferenceToJson(this);
 }

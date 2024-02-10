@@ -17,7 +17,7 @@ class ProductAdaptor {
   final Map<String, PlanDetails> plans;
 
   @JsonKey(name: 'apis')
-  final Map<String, ApiAdaptor> apis;
+  final Map<String, ApiCloudReference> apis;
 
   @JsonKey(name: 'visibility')
   final VisibilityDto visibility;
@@ -35,7 +35,7 @@ class ProductAdaptor {
   });
 
   ProductAdaptor.fromProduct(
-      Product product, Map<String, ApiAdaptor> apiAdaptor)
+      Product product, Map<String, ApiCloudReference> apiAdaptor)
       : info = product.info,
         gateways = product.gateways,
         plans = product.plans,
@@ -50,13 +50,13 @@ class ProductAdaptor {
 }
 
 @JsonSerializable()
-class ApiAdaptor {
+class ApiCloudReference {
   @JsonKey(name: 'name')
   final String name;
 
-  ApiAdaptor({required this.name});
+  ApiCloudReference({required this.name});
 
-  factory ApiAdaptor.fromJson(Map<String, dynamic> json) =>
-      _$ApiAdaptorFromJson(json);
-  Map<String, dynamic> toJson() => _$ApiAdaptorToJson(this);
+  factory ApiCloudReference.fromJson(Map<String, dynamic> json) =>
+      _$ApiCloudReferenceFromJson(json);
+  Map<String, dynamic> toJson() => _$ApiCloudReferenceToJson(this);
 }

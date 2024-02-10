@@ -28,10 +28,9 @@ class _UpdateGlobalPolicyFromAPIScreenFromAPIState
   bool _isHighlighted = false, _isCatchesOnly = false;
 
   Future<void> updateGlobalPolicy(
-      int globalPolicyIndex, String openAPIFilePath) async {
+      int globalPolicyIndex, String apiFilePath) async {
     try {
-      final openAPIFile = File(openAPIFilePath);
-      final openAPI = await OpenAPI.loadOpenAPI(openAPIFile);
+      final openAPI = await OpenApi.loadAndParseToObject(apiFilePath);
       if (context.mounted) {
         final globalPolicyMeta = widget._globalPoliciesController
             .globalPolicies[globalPolicyIndex].globalPolicyMeta;

@@ -1,0 +1,1 @@
+enum ApiTypeEnum { rest, wsdl }

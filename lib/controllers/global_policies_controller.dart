@@ -69,7 +69,7 @@ class GlobalPoliciesController {
   }
 
   Future<bool> updateGlobalPolicy(
-      int globalPolicyIndex, bool isCatchesOnly, OpenAPI openAPI) async {
+      int globalPolicyIndex, bool isCatchesOnly, OpenApi openAPI) async {
     final globalPolicyName =
         globalPolicies[globalPolicyIndex].globalPolicyMeta.name;
     final globalPolicyVersion =
