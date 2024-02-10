@@ -41,6 +41,8 @@ dependencies:
   path_provider: ^2.1.1
   
   http: ^1.1.0
+
+  enum_to_string: ^2.0.1
   
   # Used for MediaType.parse
   http_parser: ^4.0.2
