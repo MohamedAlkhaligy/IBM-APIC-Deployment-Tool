@@ -1,7 +1,14 @@
-## APICExpeditor
+# APICExpeditor
 
 A simple GUI-based deployment tool for IBM API Connect that works as an alternative to
 IBM's developer toolkit command-line tool.
+
+## Release Notes
+### APICExpeditor 1.0.1
+> February 11, 2024 
+
+#### 1.0.1:Featrues
+- Add support for wsdl apis.
 
 #### The tool supports both yaml and json files.
 
